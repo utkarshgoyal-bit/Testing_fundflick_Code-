@@ -1,0 +1,14 @@
+import express, { Express } from "express";
+import { TaskController } from "../../controller/index";
+import { hasPermission } from "../../middleware";
+import { PERMISSIONS } from "../../shared/enums/permissions";
+const router: Express = express();
+router.get("/", hasPermission(PERMISSIONS.TASK_VIEW), TaskController.getTasks);
+router.post("/", hasPermission(PERMISSIONS.TASK_CREATE), TaskController.createTask);
+router.post("/comment", hasPermission(PERMISSIONS.TASK_COMMENT), TaskController.addComment);
+router.post("/accept/:taskId", hasPermission(PERMISSIONS.TASK_COMMENT), TaskController.acceptTask);
+router.put("/", hasPermission(PERMISSIONS.TASK_UPDATE), TaskController.updateTask);
+router.delete("/", hasPermission(PERMISSIONS.TASK_DELETE), TaskController.deleteTask);
+router.patch("/completed", hasPermission(PERMISSIONS.TASK_COMMENT), TaskController.markComplete);
+router.patch("/stopRepeat", hasPermission(PERMISSIONS.TASK_REPEAT), TaskController.stopRepeat);
+export default router;

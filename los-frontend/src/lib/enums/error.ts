@@ -1,0 +1,15 @@
+export enum ERROR_MESSAGE {
+  INVALID_CREDENTIALS = "Invalid Credentials",
+  USER_ALREADY_EXISTS = "User Already Exists",
+  USER_NOT_FOUND = "User Not Found",
+  USER_DEACTIVATED = "User Deactivated",
+  INVALID_TOKEN = "Invalid Token",
+  INVALID_PASSWORD = "Invalid Password",
+  INVALID_USER = "Invalid User",
+  INVALID_ROLE = "Invalid Role",
+  INVALID_BRANCH = "Invalid Branch",
+  INVALID_USER_ROLE = "Invalid User Role",
+  PASSWORD_CANNOT_BE_EMPTY = "Password field cannot be empty",
+  USER_CANNOT_BE_CREATED = "User cannot be created",
+  UNEXPECTED = "An unexpected error occurred",
+}

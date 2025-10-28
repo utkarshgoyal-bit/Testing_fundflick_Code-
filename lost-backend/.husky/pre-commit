@@ -1,0 +1,36 @@
+#!/bin/sh
+
+# Check if there are any staged files
+staged_files=$(git diff --cached --name-only)
+if [ -z "$staged_files" ]; then
+    echo "❌ Error: No files staged for commit. Please stage your changes first."
+    echo "Use 'git add <files>' to stage files before committing."
+    exit 1
+fi
+
+# Check if any staged files are source files that need linting
+staged_source_files=$(git diff --cached --name-only | grep -E '\.(ts|tsx|js|jsx)$' || true)
+if [ -n "$staged_source_files" ]; then
+    echo "🔍 Running ESLint on staged files..."
+    
+    # Run eslint on staged files with zero warnings tolerance
+    npx eslint --max-warnings 0 $staged_source_files
+    if [ $? -ne 0 ]; then
+        echo "❌ ESLint found issues in staged files. Please fix them before committing."
+        echo "You can run 'npm run lint:fix' to auto-fix some issues."
+        exit 1
+    fi
+    
+    echo "✅ ESLint check passed!"
+fi
+
+# Run lint-staged for formatting and final checks
+echo "🎨 Running lint-staged..."
+npx lint-staged
+
+if [ $? -ne 0 ]; then
+    echo "❌ lint-staged failed. Please fix the issues and try again."
+    exit 1
+fi
+
+echo "✅ All pre-commit checks passed!"

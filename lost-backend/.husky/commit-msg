@@ -1,0 +1,44 @@
+#!/bin/sh
+
+# Run commitlint to validate commit message format
+echo "🔍 Validating commit message format..."
+npx --no -- commitlint --edit $1 --quiet
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "❌ COMMIT MESSAGE VALIDATION FAILED!"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "ℹ️  Please use conventional commit format: <type>: <description>"
+    echo ""
+    echo "📋 Available types:"
+    echo "   feat     - add new feature"
+    echo "   fix      - fix a bug"
+    echo "   chore    - maintenance tasks"
+    echo "   docs     - documentation changes"
+    echo "   style    - code style changes (formatting, etc)"
+    echo "   refactor - code refactoring"
+    echo "   test     - add/update tests"
+    echo "   build    - build system changes"
+    echo "   ci       - CI/CD changes"
+    echo "   perf     - performance improvements"
+    echo "   revert   - revert previous changes"
+    echo ""
+    echo "📝 COPY & PASTE THESE SAMPLE COMMANDS:"
+    echo "   git commit -m \"feat: add user authentication system\""
+    echo "   git commit -m \"fix: resolve login validation error\""
+    echo "   git commit -m \"chore: update dependencies and packages\""
+    echo "   git commit -m \"docs: update api documentation\""
+    echo "   git commit -m \"refactor: improve database query performance\""
+    echo ""
+    echo "💡 With optional scope:"
+    echo "   git commit -m \"feat(auth): add jwt token validation\""
+    echo "   git commit -m \"fix(api): handle null response errors\""
+    echo "   git commit -m \"chore(deps): update npm packages\""
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    exit 1
+fi
+
+echo "✅ Commit message format validated!"

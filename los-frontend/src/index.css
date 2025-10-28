@@ -1,0 +1,140 @@
+@import url(@radix-ui/themes/styles.css);
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Mode */
+    /* Background & Surfaces */
+    --color-background: #f9fafc;
+    --color-surface: #ffffff;
+    --color-surface-muted: #f1f3f8;
+
+    /* Brand Colors */
+    --color-primary: #131c32;
+    --color-primary-light: #2f3a59;
+    --color-secondary: #364f6b;
+    --color-accent: #ffc857;
+
+    /* Foreground (Text/Icon/Border) */
+    --fg-primary: #131c32;
+    --fg-secondary: #364f6b;
+    --fg-tertiary: #6b7280;
+    --fg-accent: #364f6b;
+    --fg-on-accent: #ffffff;
+    --fg-inverse: #ffffff;
+    --fg-border: #e0e6ed;
+    --fg-hover: #2f3a59;
+
+    /* text color */
+    --text-color-primary: #131c32;
+    --text-color-secondary: #4a5568;
+    --text-color-tertiary: #6b7280;
+
+    /* Status */
+    --color-error: #d32f2f;
+    --color-error2: #ef4444;
+    --color-success: #388e3c;
+    --color-upcoming: #0074d9;
+    --color-recurring: #6366f1;
+
+    --color-success2: #10b981;
+    --color-warning: #ffa726;
+    --color-warning2: #f59e0b;
+    --color-info: #0288d1;
+    --color-info2: #3b82f6;
+
+    /* Legacy variables for compatibility */
+    --success: #4bb543;
+    --warning: #ffdc7f;
+    --background: 0 0% 100%;
+    --light-primary-background: #f1f3f5;
+    --light-secondary-background: #eaecf0;
+    --light-primary-foreground: #6e6e6e;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: #213555;
+    --success-collection: #d8ebcb;
+    --primary-foreground: 0 0% 98%;
+    --secondary: #3e5879;
+    --ternary: #d8c4b6;
+    --ternary1: #f5efe7;
+    --error: red;
+    --secondary-foreground: 220 14% 96%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 10% 3.9%;
+    --chart-1: #2a9d90;
+    --chart-2: #e76e50;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+    --sidebar-background: #fff;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+/* Manual Dark Mode Toggle Class */
+[data-theme='dark'] {
+  /* Background & Surfaces */
+  --color-background: #0f1419;
+  --color-surface: #1a1f2e;
+  --color-surface-muted: #242938;
+
+  /* Brand Colors */
+  --color-primary: #e8eaef;
+  --color-primary-light: #d1d5db;
+  --color-secondary: #364f6b;
+  --color-accent: #ffc857;
+
+  /* Foreground (Text/Icon/Border) */
+  --fg-primary: #f9fafb;
+  --fg-secondary: #d1d5db;
+  --fg-tertiary: #9ca3af;
+  --fg-accent: #ffc857;
+  --fg-on-accent: #131c32;
+  --fg-inverse: #131c32;
+  --fg-border: #374151;
+  --fg-hover: #e5e7eb;
+
+  /* Status */
+  --color-error: #ef4444;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+* {
+  font-family: 'National Park', serif;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}

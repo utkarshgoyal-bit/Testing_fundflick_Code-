@@ -1,0 +1,87 @@
+name: Deploy prod-backend
+
+on:
+  push:
+    branches:
+      - Pre-Prod
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build project
+        run: pnpm run build
+
+      - name: Generate .env file
+        run: |
+          cat <<EOT > .env
+          PORT=${{ secrets.PRE_PROD_PORT }}
+          DATABASE_URL=${{ secrets.MAITRII_DB }}
+          MAITRII_PASSWORD=${{ secrets.MAITRII_PASSWORD }}
+          DB_ENV=preprod
+          JWT_SECRET_SALT=${{ secrets.JWT_SECRET_SALT }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          DATABASE_URL=${{ secrets.MAITRII_URL }}
+          DB_CONFIG=${{ secrets.DB_CONFIG }}
+          OUTLOOK_USER=${{ secrets.OUTLOOK_USER }}
+          OUTLOOK_PASS=${{ secrets.OUTLOOK_PASS }}
+          API_SECRET=${{ secrets.API_SECRET }}
+          API_KEY=${{ secrets.API_KEY }}
+          CLOUD_NAME=${{ secrets.CLOUD_NAME }}
+          apiVersion=${{ secrets.apiVersion }}
+          AWS_REGION=${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_BUCKET_NAME=${{ secrets.PROD_AWS_BUCKET_NAME }}
+          SMS_API_KEY=${{ secrets.SMS_API_KEY }}
+          SMS_API_ROUTE=${{ secrets.SMS_API_ROUTE }}
+          FIREBASE_SERVICE_ACCOUNT=${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          EOT
+
+      - name: Clean up before deploy
+        run: rm -rf node_modules .git .github
+
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Upload built code to production server
+        run: |
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.SERVER_HOST }} "rm -rf /root/pre-prod/backend"
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -r -o StrictHostKeyChecking=no . root@${{ secrets.SERVER_HOST }}:/root/pre-prod/backend
+
+      - name: Restart PM2 on server
+        run: |
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.SERVER_HOST }} << 'EOF'
+          set -e
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          export PATH="$NVM_DIR/versions/node/v23.8.0/bin:$PATH"
+
+          cd /root/pre-prod/backend
+          pnpm install
+
+          if pm2 list | grep -q "pre-prod-backend"; then
+            pm2 stop pre-prod-backend
+            pm2 delete pre-prod-backend
+          fi
+
+          pm2 start "npm start" --name pre-prod-backend
+          pm2 save
+          pm2 startup
+          echo "✅ Production backend deployed and running."
+          EOF

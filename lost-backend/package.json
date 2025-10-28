@@ -1,0 +1,129 @@
+{
+  "name": "los-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/rudresh98/lost-backend.git",
+  "author": "Rudresh Oza <ozarudresh98@gmail.com>",
+  "license": "MIT",
+  "keywords": [
+    "node",
+    "typescript",
+    "express",
+    "mongodb"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/body-parser": "^1.19.5",
+    "@types/morgan": "^1.9.9",
+    "aws-sdk": "^2.1692.0",
+    "axios": "^1.7.7",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.3",
+    "cloudinary": "^2.5.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "csv-parser": "^3.1.0",
+    "csvtojson": "^2.0.10",
+    "docx-templates": "^4.13.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-mongo-sanitize": "^2.2.0",
+    "firebase-admin": "^13.2.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "libreoffice": "^0.4.5",
+    "libreoffice-convert": "^1.6.0",
+    "lodash": "^4.17.21",
+    "moment": "^2.30.1",
+    "moment-timezone": "^0.6.0",
+    "mongodb": "^6.9.0",
+    "mongoose": "^8.6.2",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.15",
+    "number-precision": "^1.6.0",
+    "pizzip": "^3.1.7",
+    "socket.io": "^4.8.1",
+    "swagger-ui-express": "^5.0.1",
+    "tesseract.js": "^5.1.1",
+    "tesseract.js-core": "^5.1.1",
+    "ts-node": "^10.9.2",
+    "uuid": "^10.0.0",
+    "validator": "^13.12.0",
+    "winston": "^3.17.0",
+    "xlsx": "^0.18.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@eslint/js": "^9.34.0",
+    "@types/cookie-parser": "^1.4.8",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.5.5",
+    "@types/node-cron": "^3.0.11",
+    "@types/nodemailer": "^6.4.16",
+    "@types/uuid": "^10.0.0",
+    "@types/validator": "^13.12.2",
+    "@typescript-eslint/eslint-plugin": "^8.30.1",
+    "@typescript-eslint/parser": "^8.30.1",
+    "eslint": "^9.25.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "globals": "^16.3.0",
+    "husky": "^9.1.7",
+    "jiti": "^2.5.1",
+    "lint-staged": "^16.1.6",
+    "nodemon": "^3.1.5",
+    "prettier": "^3.5.3",
+    "typescript": "^5.6.2",
+    "typescript-eslint": "^8.42.0"
+  },
+  "scripts": {
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.{ts} --fix",
+    "lint:check": "eslint src/**/*.{ts} --max-warnings 0",
+    "prepare": "husky",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier --write \"src/**/*.{ts,json,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,json,md}\""
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "@firebase/util",
+      "@scarf/scarf",
+      "aws-sdk",
+      "protobufjs",
+      "tesseract.js"
+    ],
+    "onlyBuiltDependencies": [
+      "@firebase/util",
+      "@scarf/scarf",
+      "aws-sdk",
+      "protobufjs",
+      "tesseract.js"
+    ]
+  }
+}

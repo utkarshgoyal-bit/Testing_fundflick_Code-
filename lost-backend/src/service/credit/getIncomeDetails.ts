@@ -1,0 +1,17 @@
+import mongoose from "mongoose";
+import { CustomerFile } from "../../models";
+import { ERROR } from "../../shared/enums";
+
+export default async function getIncomeDetails(fileId: string, loginUser: any) {
+  const file = await CustomerFile.findOne({
+    _id: new mongoose.Types.ObjectId(fileId),
+    organization: loginUser.organization._id,
+  }).select({
+    credit: 1,
+  });
+  if (!file || !file.credit || !file.credit.incomeDetails) {
+    throw ERROR.NOT_FOUND;
+  }
+
+  return file.credit.incomeDetails;
+}

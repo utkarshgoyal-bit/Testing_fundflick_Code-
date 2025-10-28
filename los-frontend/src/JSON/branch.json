@@ -1,0 +1,18 @@
+[
+    {
+        "label": "Branch Name",
+        "name": "branch",
+        "type": "text",
+        "placeholder": "Enter Branch Name",
+        "validations": {
+            "required": {
+                "value": true,
+                "message": "Branch Name is required"
+            },
+            "minLength": {
+                "value": 3,
+                "message": "Branch Name must be at least 3 characters"
+            }
+        }
+    }
+]

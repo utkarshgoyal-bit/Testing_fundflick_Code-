@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",                        // Allows modern JS features
+    "module": "commonjs",                      // Good for Node.js
+    "lib": ["ES2020"],                         // Supports newer APIs
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "esModuleInterop": true,                   // Required for `import x from 'x'` compatibility
+    "moduleResolution": "node",                // Ensures resolution aligns with Node.js behavior
+    "resolveJsonModule": true,                 // Allows importing JSON files
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noImplicitAny": true,                     // Catches more bugs (optional)
+    "noFallthroughCasesInSwitch": true         // Optional safety check
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

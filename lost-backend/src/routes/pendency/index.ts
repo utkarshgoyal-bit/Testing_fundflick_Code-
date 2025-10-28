@@ -1,0 +1,12 @@
+import express, { Express } from "express";
+import { PendencyController } from "../../controller/index";
+import { PERMISSIONS } from "../../shared/enums/permissions";
+import { hasPermission } from "../../middleware";
+const router: Express = express();
+router.get("/", hasPermission(PERMISSIONS.PENDENCY_VIEW), PendencyController.getPendency);
+router.post("/", hasPermission(PERMISSIONS.PENDENCY_CREATE), PendencyController.createPendency);
+router.put("/", hasPermission(PERMISSIONS.PENDENCY_UPDATE), PendencyController.updatePendency);
+router.delete("/", hasPermission(PERMISSIONS.PENDENCY_DELETE), PendencyController.deletePendency);
+router.patch("/completed", hasPermission(PERMISSIONS.PENDENCY_COMPLETE), PendencyController.markCompleted);
+router.patch("/reactive", hasPermission(PERMISSIONS.PENDENCY_REACTIVATE), PendencyController.reActivate);
+export default router;

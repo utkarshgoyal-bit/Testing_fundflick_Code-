@@ -1,0 +1,76 @@
+name: Deploy dev-backend
+
+on:
+  push:
+    branches:
+      - dev 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Debug Secrets
+        run: |
+          echo "SERVER_HOST=${{ secrets.SERVER_HOST }}"
+          echo "SERVER_PASSWORD=${{ secrets.SERVER_PASSWORD }}"
+
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: SSH into server and deploy
+        run: |
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.SERVER_HOST }} <<EOF
+          set -e  # Exit on any error
+          export NVM_DIR="\$HOME/.nvm"
+          [ -s "\$NVM_DIR/nvm.sh" ] && . "\$NVM_DIR/nvm.sh"
+          export PATH="\$NVM_DIR/versions/node/v23.8.0/bin:\$PATH"
+
+          cd /root/dev
+          pm2 save
+          if pm2 list | grep -q "dev-backend"; then
+            echo "dev-backend is running. Stopping..."
+            pm2 stop dev-backend
+            pm2 delete dev-backend
+            rm -rf dev-backend
+          fi
+
+          rm -rf lost-backend
+          git clone https://github.com/Maitrii-Infotech/lost-backend.git
+          cd lost-backend
+          git checkout dev
+          
+          # Create .env file
+          cat <<EOT > .env
+          PORT=8000
+          MAITRII_PASSWORD=${{ secrets.MAITRII_PASSWORD }}
+          DB_ENV=${{ secrets.DB_ENV }}
+          JWT_SECRET_SALT=${{ secrets.JWT_SECRET_SALT }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          DB_CONFIG=${{ secrets.DB_CONFIG }}
+          OUTLOOK_USER=${{ secrets.OUTLOOK_USER }}
+          OUTLOOK_PASS=${{ secrets.OUTLOOK_PASS }}
+          API_SECRET=${{ secrets.API_SECRET }}
+          API_KEY=${{ secrets.API_KEY }}
+          CLOUD_NAME=${{ secrets.CLOUD_NAME }}
+          apiVersion=${{ secrets.apiVersion }}
+          AWS_REGION=${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}
+          SMS_API_KEY=${{ secrets.SMS_API_KEY }}
+          SMS_API_ROUTE=${{ secrets.SMS_API_ROUTE }}
+          FIREBASE_SERVICE_ACCOUNT=${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          EOT
+
+          pnpm install
+          pnpm run build
+          pm2 start "npm start" --name dev-backend
+          pm2 save
+          pm2 startup
+          echo "Deployment successful!"
+          EOF
