@@ -16,7 +16,7 @@ function* fetchTasksSaga(action: {
   };
 }) {
   try {
-    yield put(setLoading({ loading: true, message: 'Fetching tasks...' }));
+    yield put(setLoading({ loading: !action.payload?.silent, message: 'Fetching tasks...' }));
     const { activeTab, activeFilter, statusFilter, activePage } = yield select((state: RootState) => state.tasks);
     const response: ApiResponse<{ data: ITaskTable[]; total: number }> = yield call(
       apiCaller,

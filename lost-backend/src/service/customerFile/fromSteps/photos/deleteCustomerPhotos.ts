@@ -1,9 +1,17 @@
-import { Types } from "mongoose";
-import { EmployeeSchema } from "../../../../models";
-import customerFileSchema from "../../../../models/customerFile";
-import { ERROR } from "../../../../shared/enums";
-import CustomerFileStatusNotification from "../../../../socket/sendNotification";
-const deleteCustomerPhotos = async ({ loginUser, body, id }: { loginUser: any; body: any; id: string }) => {
+import { Types } from 'mongoose';
+import { EmployeeSchema } from '../../../../schema';
+import customerFileSchema from '../../../../schema/customerFile';
+import { ERROR } from '../../../../shared/enums';
+import CustomerFileStatusNotification from '../../../../socket/sendNotification';
+const deleteCustomerPhotos = async ({
+  loginUser,
+  body,
+  id,
+}: {
+  loginUser: any;
+  body: any;
+  id: string;
+}) => {
   const customerFile = await customerFileSchema.findOne({
     _id: id,
     organization: loginUser.organization._id,
@@ -24,14 +32,14 @@ const deleteCustomerPhotos = async ({ loginUser, body, id }: { loginUser: any; b
   if (!loginUserDetails) {
     throw ERROR.USER_NOT_FOUND;
   }
-  if (customerFile.status !== "Pending") {
+  if (customerFile.status !== 'Pending') {
     CustomerFileStatusNotification({
       loanApplicationNumber: customerFile.loanApplicationNumber,
       creator: customerFile.createdBy,
       customerFileId: customerFile._id,
       updater: loginUser,
       message: {
-        message: `${loginUserDetails.firstName + " " + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role}) has deleted a photo of the file`,
+        message: `${loginUserDetails.firstName + ' ' + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role}) has deleted a photo of the file`,
         title: `File FI-${customerFile.loanApplicationNumber} A photo is deleted `,
       },
       organization: loginUser.organization._id,

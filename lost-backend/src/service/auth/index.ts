@@ -1,5 +1,5 @@
+import forgotPassword from './forgotPassword';
 import login from './login';
 import signUp from './signup';
-import updatePassword from './updatePassword';
 
-export default { signUp, login, updatePassword };
+export default { signUp, login, forgotPassword };

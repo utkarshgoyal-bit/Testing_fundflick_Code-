@@ -1,4 +1,4 @@
-import CollectionModel from "../../../models/collection/dataModel";
+import CollectionModel from '../../../schema/collection/dataModel';
 const exportCasesByDate = async (loginUser: any) => {
   const data = await CollectionModel.find({ organization: loginUser.organization._id }).select({
     __v: 0,

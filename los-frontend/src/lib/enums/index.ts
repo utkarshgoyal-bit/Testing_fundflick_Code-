@@ -11,6 +11,7 @@ export * from './applicant';
 export * from './steps';
 export * from './bank';
 export * from './customer';
+export * from './task';
 
 export const PAYMENT_STATUS = {
   PAID: 'paid',

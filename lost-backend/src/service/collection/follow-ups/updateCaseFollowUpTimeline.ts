@@ -1,9 +1,9 @@
-import { Types } from "mongoose";
-import { toFormatDateToUnix, uploadFileToS3 } from "../../../helper";
-import { IDbErrors, User } from "../../../interfaces";
-import CollectionModel from "../../../models/collection/dataModel";
-import FollowUpData from "../../../models/collection/followUpData";
-import { CURRENCY_SYMBOLS } from "../../../shared/enums";
+import { Types } from 'mongoose';
+import { toFormatDateToUnix, uploadFileToS3 } from '../../../helper';
+import { IDbErrors } from '../../../interfaces';
+import CollectionModel from '../../../schema/collection/dataModel';
+import FollowUpData from '../../../schema/collection/followUpData';
+import { CURRENCY_SYMBOLS } from '../../../shared/enums';
 const updateCaseFollowUpTimeline = async ({
   caseId,
   payload,
@@ -24,23 +24,38 @@ const updateCaseFollowUpTimeline = async ({
     }).lean();
     const employeeId = employee?._id;
     if (!caseData) {
-      throw new Error("Case data not found");
+      throw new Error('Case data not found');
     }
     if (file) {
-      const selfie = await uploadFileToS3(file.path, `${caseId}/${"selfie" + new Date()}`, file.mimetype);
+      const selfie = await uploadFileToS3(
+        file.path,
+        `${caseId}/${'selfie' + new Date()}`,
+        file.mimetype
+      );
       payload.selfie = selfie;
     }
 
     const upsertPayload = {
       ...payload,
-      dateTimeStamp: toFormatDateToUnix({ date: payload.date, dateFormat: "YYYY-MM-DD" }),
-      dateEndTimeStamp: toFormatDateToUnix({ date: payload.date, dateFormat: "YYYY-MM-DD", withFullTimeStamp: true }),
+      dateTimeStamp: toFormatDateToUnix({ date: payload.date, dateFormat: 'YYYY-MM-DD' }),
+      dateEndTimeStamp: toFormatDateToUnix({
+        date: payload.date,
+        dateFormat: 'YYYY-MM-DD',
+        withFullTimeStamp: true,
+      }),
       ...(!payload.commit
         ? { commitTimeStamp: null }
-        : { commitTimeStamp: toFormatDateToUnix({ date: payload.commit, dateFormat: "YYYY-MM-DD" }) }),
+        : {
+            commitTimeStamp: toFormatDateToUnix({ date: payload.commit, dateFormat: 'YYYY-MM-DD' }),
+          }),
       ...(!payload.commit
         ? { commitEndTimeStamp: null }
-        : { commitEndTimeStamp: toFormatDateToUnix({ date: payload.commit, dateFormat: "YYYY-MM-DD" }) }),
+        : {
+            commitEndTimeStamp: toFormatDateToUnix({
+              date: payload.commit,
+              dateFormat: 'YYYY-MM-DD',
+            }),
+          }),
       createdBy: new Types.ObjectId(loginUser.employeeId),
       caseNo: caseData.caseNo,
       userId: loginUser?.employeeId,
@@ -56,9 +71,9 @@ const updateCaseFollowUpTimeline = async ({
     try {
       addFollowUpData = await FollowUpData.create(upsertPayload);
     } catch (error: unknown) {
-      console.error("Error inserting follow-up data:", error);
+      console.error('Error inserting follow-up data:', error);
       const dbError = error as IDbErrors;
-      throw new Error(`${dbError.message || "Failed to insert follow-up data"}`);
+      throw new Error(`${dbError.message || 'Failed to insert follow-up data'}`);
     }
     try {
       updatedCase = await CollectionModel.updateOne(
@@ -66,17 +81,17 @@ const updateCaseFollowUpTimeline = async ({
         { $push: { followUps: addFollowUpData._id } }
       );
     } catch (error) {
-      console.error("Error inserting Collection data:", error);
-      throw new Error("Failed to update Collection data");
+      console.error('Error inserting Collection data:', error);
+      throw new Error('Failed to update Collection data');
     }
     return {
       caseId,
       addFollowUpData,
       updatedCase,
-      message: "Timeline updated successfully.",
+      message: 'Timeline updated successfully.',
     };
   } catch (error) {
-    console.error("Error in updateFollowUpTimeline:", error);
+    console.error('Error in updateFollowUpTimeline:', error);
     throw error;
   }
 };

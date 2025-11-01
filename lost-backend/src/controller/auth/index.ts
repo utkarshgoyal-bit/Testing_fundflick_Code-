@@ -1,11 +1,10 @@
 import { Request, Response } from 'express';
 import { isTrue } from '../../helper/booleanCheck';
-import { ApiResponseHandler, StatusCodes } from '../../helper/responseHelper';
+import { ApiResponseHandler } from '../../helper/responseHelper';
 import { DbError } from '../../interfaces/user.interface';
 import Logger from '../../lib/logger';
 import { AuthServices } from '../../service/index';
-import { ERROR, SUCCESS } from '../../shared/enums';
-// import { COOKIE_OPTIONS } from "../..";
+import { ERROR, SUCCESS, StatusCodes } from '../../shared/enums';
 class AuthController {
   signUp = async (req: Request, res: Response) => {
     try {
@@ -34,7 +33,6 @@ class AuthController {
   login = async (req: Request, res: Response) => {
     try {
       const result = await AuthServices.login(req.body);
-      // res.cookie("token", result.token, COOKIE_OPTIONS);
       ApiResponseHandler.sendResponse(res, StatusCodes.OK, result, SUCCESS.LOGIN_SUCCESS);
     } catch (error) {
       Logger.error('CONTROLLER:LOGIN ERROR', error);
@@ -44,7 +42,7 @@ class AuthController {
   forgotPassword = async (req: Request, res: Response) => {
     try {
       const { body, loginUser } = req;
-      const result = await AuthServices.updatePassword({ body, loginUser });
+      const result = await AuthServices.forgotPassword({ body, loginUser });
       ApiResponseHandler.sendResponse(res, StatusCodes.OK, result, 'Password Reset  Successfully');
     } catch (error) {
       Logger.error('CONTROLLER:FORGOT PASSWORD ERROR', error);
@@ -52,7 +50,6 @@ class AuthController {
     }
   };
   logout = async (req: Request, res: Response) => {
-    // res.clearCookie("token", COOKIE_OPTIONS);
     res.status(200).json({ msg: 'Logged out' });
   };
 }

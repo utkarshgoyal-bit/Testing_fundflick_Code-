@@ -1,9 +1,9 @@
-import NP from "number-precision";
-import { toFormatDateToUnix, uploadFileToS3 } from "../../../helper";
-import { UserSchema } from "../../../models";
-import CollectionModel from "../../../models/collection/dataModel";
-import PaymentData from "../../../models/collection/payment";
-import { CURRENCY_SYMBOLS, PAYMENT_MODE } from "../../../shared/enums";
+import NP from 'number-precision';
+import { toFormatDateToUnix, uploadFileToS3 } from '../../../helper';
+import { UserSchema } from '../../../schema';
+import CollectionModel from '../../../schema/collection/dataModel';
+import PaymentData from '../../../schema/collection/payment';
+import { CURRENCY_SYMBOLS, PAYMENT_MODE } from '../../../shared/enums';
 const updateCasePayment = async ({
   caseId,
   payload,
@@ -26,19 +26,24 @@ const updateCasePayment = async ({
       _id: loginUser._id,
       organization: loginUser.organization._id,
     });
-    const employeeName = employee?.firstName + " " + employee?.lastName;
+    const employeeName = employee?.firstName + ' ' + employee?.lastName;
     const employeeId = employee?._id;
     if (!caseData) {
-      throw new Error("Case not found.");
+      throw new Error('Case not found.');
     }
     if (file) {
-      const selfie = await uploadFileToS3(file.path, `${caseId}/${"selfie" + new Date()}`, file.mimetype);
+      const selfie = await uploadFileToS3(
+        file.path,
+        `${caseId}/${'selfie' + new Date()}`,
+        file.mimetype
+      );
       payload.selfie = selfie;
     }
     if (caseData.dueEmiAmount > 0 && +caseData.dueEmiAmount >= +payload.amount) {
       const dueEmiAmount = NP.round(NP.minus(caseData?.dueEmiAmount || 0, payload?.amount || 0), 2);
       const remainingEmiAmount = Math.ceil(NP.divide(dueEmiAmount || 0, caseData?.emiAmount || 0));
-      const dueEmi = caseData.emiAmount && dueEmiAmount ? NP.round(remainingEmiAmount || 0, 2) : NP.round(0, 2);
+      const dueEmi =
+        caseData.emiAmount && dueEmiAmount ? NP.round(remainingEmiAmount || 0, 2) : NP.round(0, 2);
       await CollectionModel.updateOne(
         { _id: payload.refCaseId, organization: loginUser.organization._id },
         {
@@ -54,8 +59,12 @@ const updateCasePayment = async ({
       refCaseId: payload.refCaseId,
       amount: payload.amount,
       date: payload.date,
-      dateTimeStamp: toFormatDateToUnix({ date: payload.date, dateFormat: "YYYY-MM-DD" }),
-      dateEndTimeStamp: toFormatDateToUnix({ date: payload.date, dateFormat: "YYYY-MM-DD", withFullTimeStamp: true }),
+      dateTimeStamp: toFormatDateToUnix({ date: payload.date, dateFormat: 'YYYY-MM-DD' }),
+      dateEndTimeStamp: toFormatDateToUnix({
+        date: payload.date,
+        dateFormat: 'YYYY-MM-DD',
+        withFullTimeStamp: true,
+      }),
       paymentMode: payload.paymentMode,
       remarks: payload.remarks,
       isExtraCharges: payload.isExtraCharges,
@@ -79,14 +88,18 @@ const updateCasePayment = async ({
 
     if (paymentMode == PAYMENT_MODE.CASH) {
       if (!userData || !caseData) {
-        throw new Error("User or Case not found.");
+        throw new Error('User or Case not found.');
       }
-      userData.ledgerBalance = NP.plus(userData.ledgerBalance, payload.amount, caseData.dueEmiAmount);
+      userData.ledgerBalance = NP.plus(
+        userData.ledgerBalance,
+        payload.amount,
+        caseData.dueEmiAmount
+      );
       userData.ledgerBalanceHistory.push({
         date: new Date(),
         dateTimeStamp: new Date().getTime(),
         ledgerBalance: payload.amount,
-        type: "debit",
+        type: 'debit',
         remarks: `Rs. ${payload.amount} received for file no ${caseData.caseNo} (Collection)`,
       });
       await userData.save();
@@ -94,12 +107,12 @@ const updateCasePayment = async ({
     return {
       caseId,
       payload,
-      message: "Data updated successfully and payment saved.",
+      message: 'Data updated successfully and payment saved.',
       savedPaymentDetails,
       savePaymentDetailsInCase,
     };
   } catch (error) {
-    console.error("Error in paymentCollection:", error);
+    console.error('Error in paymentCollection:', error);
     throw error;
   }
 };

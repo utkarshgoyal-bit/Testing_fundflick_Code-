@@ -1,18 +1,23 @@
-import { BranchSchema, CustomerFile, EmployeeSchema, UserSchema } from "../../models";
-import checkPermission from "../../lib/permissions/checkPermission";
-import { PERMISSIONS } from "../../shared/enums/permissions";
-import isSuperAdmin from "../../helper/booleanCheck/isSuperAdmin";
+import isSuperAdmin from '../../helper/booleanCheck/isSuperAdmin';
+import checkPermission from '../../lib/permissions/checkPermission';
+import { BranchSchema, CustomerFile, EmployeeSchema, UserSchema } from '../../schema';
+import { PERMISSIONS } from '../../shared/enums/permissions';
 
 const getDashboard = async ({ loginUser }: { loginUser: any }) => {
-  const [canViewUsers, canViewBranches, canViewEmployees, canViewCustomerFiles, canViewCustomerFilesBranch] =
-    await Promise.all([
-      checkPermission(loginUser, PERMISSIONS.USER_VIEW_OTHERS),
-      checkPermission(loginUser, PERMISSIONS.BRANCH_VIEW_OTHERS),
-      checkPermission(loginUser, PERMISSIONS.EMPLOYEE_VIEW_OTHERS),
-      checkPermission(loginUser, PERMISSIONS.CUSTOMER_FILE_VIEW_OTHERS),
-      checkPermission(loginUser, PERMISSIONS.CUSTOMER_FILE_VIEW_BRANCH),
-    ]);
-  const _isSuperAdmin = isSuperAdmin([loginUser?.role || ""]);
+  const [
+    canViewUsers,
+    canViewBranches,
+    canViewEmployees,
+    canViewCustomerFiles,
+    canViewCustomerFilesBranch,
+  ] = await Promise.all([
+    checkPermission(loginUser, PERMISSIONS.USER_VIEW_OTHERS),
+    checkPermission(loginUser, PERMISSIONS.BRANCH_VIEW_OTHERS),
+    checkPermission(loginUser, PERMISSIONS.EMPLOYEE_VIEW_OTHERS),
+    checkPermission(loginUser, PERMISSIONS.CUSTOMER_FILE_VIEW_OTHERS),
+    checkPermission(loginUser, PERMISSIONS.CUSTOMER_FILE_VIEW_BRANCH),
+  ]);
+  const _isSuperAdmin = isSuperAdmin([loginUser?.role || '']);
 
   const orgFilter = { organization: loginUser.organization._id };
 
@@ -33,15 +38,21 @@ const getDashboard = async ({ loginUser }: { loginUser: any }) => {
   }
 
   // Parallel counts
-  const [userCount, inactiveUsers, employeeCount, inactiveEmployees, branchCount, customerFileCount] =
-    await Promise.all([
-      UserSchema.countDocuments(userQuery),
-      UserSchema.countDocuments({ ...userQuery, isActive: false }),
-      EmployeeSchema.countDocuments(employeeQuery),
-      EmployeeSchema.countDocuments({ ...employeeQuery, isActive: false }),
-      BranchSchema.countDocuments(branchQuery),
-      CustomerFile.countDocuments(customerFileQuery),
-    ]);
+  const [
+    userCount,
+    inactiveUsers,
+    employeeCount,
+    inactiveEmployees,
+    branchCount,
+    customerFileCount,
+  ] = await Promise.all([
+    UserSchema.countDocuments(userQuery),
+    UserSchema.countDocuments({ ...userQuery, isActive: false }),
+    EmployeeSchema.countDocuments(employeeQuery),
+    EmployeeSchema.countDocuments({ ...employeeQuery, isActive: false }),
+    BranchSchema.countDocuments(branchQuery),
+    CustomerFile.countDocuments(customerFileQuery),
+  ]);
 
   return {
     userCount,

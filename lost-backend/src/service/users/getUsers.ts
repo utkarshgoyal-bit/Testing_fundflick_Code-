@@ -1,39 +1,47 @@
-import { isTrue } from "../../helper";
-import { UserSchema } from "../../models";
-import checkPermission from "../../lib/permissions/checkPermission";
-import { PERMISSIONS } from "../../shared/enums/permissions";
-import isSuperAdmin from "../../helper/booleanCheck/isSuperAdmin";
-
+import { isTrue } from '../../helper';
+import isSuperAdmin from '../../helper/booleanCheck/isSuperAdmin';
+import { LoginUser } from '../../interfaces';
+import checkPermission from '../../lib/permissions/checkPermission';
+import { UserSchema } from '../../schema';
+import { PERMISSIONS } from '../../shared/enums/permissions';
 const getUsers = async ({
   loginUser,
   isBlocked,
   branchName,
   isAllowSelfUser,
 }: {
-  loginUser: any;
+  loginUser: LoginUser;
   isBlocked?: string | null;
   branchName?: string;
   isAllowSelfUser?: boolean;
 }) => {
-  const organizationId = loginUser.organization._id;
+  const {
+    organization: { _id: organizationId },
+    employeeId,
+  } = loginUser;
+
   const projections = {
     password: 0,
     updatedAt: 0,
     _v: 0,
     orgName: 0,
   };
-  if (!organizationId) {
-    throw Error("Organization not found");
-  }
 
-  let query: any = { organizations: organizationId };
+  let query: {
+    organizations: string;
+    $or?: { branches?: { $in?: string[] }; employeeId?: string }[];
+    branches?: { $in?: string[] };
+    MONGO_DELETED?: { $ne: boolean };
+  } = {
+    organizations: organizationId,
+  };
 
   const [canCreateUser, canViewBranch, canViewOthers] = await Promise.all([
     checkPermission(loginUser, PERMISSIONS.USER_CREATE),
     checkPermission(loginUser, PERMISSIONS.USER_VIEW_BRANCH),
     checkPermission(loginUser, PERMISSIONS.USER_VIEW_OTHERS),
   ]);
-  const _isSuperAdmin = isSuperAdmin([loginUser?.role || ""]);
+  const _isSuperAdmin = isSuperAdmin([loginUser?.role || '']);
   if (!canViewOthers && !canCreateUser && !_isSuperAdmin) {
     query.$or = [];
 
@@ -51,7 +59,7 @@ const getUsers = async ({
   query = {
     ...query,
     ...(!isAllowSelfUser && {
-      employeeId: { $ne: loginUser?.employeeId },
+      employeeId: { $ne: employeeId },
     }),
     ...(branchName && {
       branches: { $in: [branchName] },
@@ -59,13 +67,14 @@ const getUsers = async ({
     ...(isBlocked && {
       isActive: !isTrue(isBlocked),
     }),
+    MONGO_DELETED: { $ne: true },
   };
 
   const users = await UserSchema.find(query, projections)
-    .populate(["employeeId", "roleRef"])
+    .populate(['employeeId', 'roleRef'])
     .sort({ isActive: -1, createdAt: -1 });
 
-  return users.map((item: any) => ({
+  const mappedUsers = users.map((item: any) => ({
     _id: item._id,
     isActive: item.isActive,
     role: item.role,
@@ -78,7 +87,7 @@ const getUsers = async ({
     }),
     branches: item.branches,
     employeeId: item.employeeId?._id,
-    name: [item.employeeId?.firstName, item.employeeId?.lastName].filter(Boolean).join(" "),
+    name: [item.employeeId?.firstName, item.employeeId?.lastName].filter(Boolean).join(' '),
     email: item.employeeId?.email,
     mobile: item.employeeId?.mobile,
     dob: item.employeeId?.dob,
@@ -87,6 +96,7 @@ const getUsers = async ({
     ledgerBalance: item.ledgerBalance,
     createdAt: item.createdAt,
   }));
+  return mappedUsers;
 };
 
 export default getUsers;

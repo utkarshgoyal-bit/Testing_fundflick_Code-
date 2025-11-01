@@ -1,4 +1,4 @@
-import { ROLES } from "../../shared/enums";
+import { ROLES } from '../../shared/enums';
 const isClusterHead = (roles: string[]) => {
   return roles.includes(ROLES.CLUSTER_HEAD);
 };

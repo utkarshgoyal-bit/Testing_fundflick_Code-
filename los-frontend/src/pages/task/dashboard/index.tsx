@@ -1,16 +1,17 @@
 import { Button } from '@/components/ui/button';
-import TeamDashboard from './teamDashboard';
-import { useEffect, useState } from 'react';
-import IndividualDashboard from './IndividualDashboard';
-import { useDispatch } from 'react-redux';
 import { FETCH_TASKS_DASHBOARD_DATA } from '@/redux/actions/types';
+import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import IndividualDashboard from './IndividualDashboard';
+import TeamDashboard from './teamDashboard';
 
 export default function TaskDashboard() {
   const dispatch = useDispatch();
-  const [activeTab, setActiveTab] = useState('team');
+  const [activeTab, setActiveTab] = useState('individual');
+  const [incompleteTasksFilter, setIncompleteTasksFilter] = useState<'pending' | 'inProgress'>('pending');
   useEffect(() => {
-    dispatch({ type: FETCH_TASKS_DASHBOARD_DATA, payload: { type: activeTab } });
-  }, [activeTab]);
+    dispatch({ type: FETCH_TASKS_DASHBOARD_DATA, payload: { type: activeTab, incompleteTasksFilter } });
+  }, [activeTab, incompleteTasksFilter]);
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
@@ -27,8 +28,8 @@ export default function TaskDashboard() {
           </Button>
         </div>
       </div>
-      {activeTab === 'individual' && <IndividualDashboard />}
-      {activeTab === 'team' && <TeamDashboard />}
+      {activeTab === 'individual' && <IndividualDashboard setIncompleteTasksFilter={setIncompleteTasksFilter} />}
+      {activeTab === 'team' && <TeamDashboard setIncompleteTasksFilter={setIncompleteTasksFilter} />}
     </div>
   );
 }

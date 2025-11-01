@@ -1,6 +1,6 @@
-import { Types } from "mongoose";
-import RolesSchema from "../../models/roles";
-import { ERROR } from "../../shared/enums";
+import { Types } from 'mongoose';
+import RolesSchema from '../../schema/roles';
+import { ERROR } from '../../shared/enums';
 const addRole = async ({ data, loginUser }: { data: any; loginUser: any }) => {
   if (!data.name) {
     throw ERROR.BAD_REQUEST;

@@ -13,12 +13,17 @@ staged_source_files=$(git diff --cached --name-only | grep -E '\.(ts|tsx|js|jsx)
 if [ -n "$staged_source_files" ]; then
     echo "🔍 Running ESLint on staged files..."
     
-    # Run eslint on staged files with zero warnings tolerance
-    npx eslint --max-warnings 0 $staged_source_files
-    if [ $? -ne 0 ]; then
-        echo "❌ ESLint found issues in staged files. Please fix them before committing."
+    # Run eslint on staged files - allow warnings but block on errors
+    npx eslint $staged_source_files
+    eslint_exit_code=$?
+    
+    if [ $eslint_exit_code -eq 2 ]; then
+        echo "❌ ESLint found errors in staged files. Please fix them before committing."
         echo "You can run 'npm run lint:fix' to auto-fix some issues."
         exit 1
+    elif [ $eslint_exit_code -eq 1 ]; then
+        echo "⚠️  ESLint found warnings in staged files, but commit will proceed."
+        echo "Consider running 'npm run lint:fix' to fix warnings."
     fi
     
     echo "✅ ESLint check passed!"

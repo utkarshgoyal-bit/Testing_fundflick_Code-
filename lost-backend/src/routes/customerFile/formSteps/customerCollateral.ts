@@ -1,6 +1,6 @@
-import express, { Express } from "express";
-import { CustomerCollateralController } from "../../../controller";
+import express, { Express } from 'express';
+import { CustomerCollateralController } from '../../../controller';
 const router: Express = express();
-router.post("/:id", CustomerCollateralController.addCustomerCollateral);
-router.get("/:id", CustomerCollateralController.getCustomerCollateral);
+router.post('/:id', CustomerCollateralController.addCustomerCollateral);
+router.get('/:id', CustomerCollateralController.getCustomerCollateral);
 export default router;

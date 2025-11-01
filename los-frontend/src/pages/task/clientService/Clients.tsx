@@ -1,16 +1,16 @@
-import { IClientTable } from '@/lib/interfaces';
-import { DELETE_CLIENT, FETCH_CLIENTS } from '@/redux/actions/types';
-import { RootState } from '@/redux/slices';
-import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Eye, Mail, Pencil, Phone, Trash } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { buildOrgRoute } from '@/helpers/routeHelper';
+import { IClientTable } from '@/lib/interfaces';
+import { cn } from '@/lib/utils';
+import { DELETE_CLIENT, FETCH_CLIENTS } from '@/redux/actions/types';
+import { RootState } from '@/redux/slices';
+import { Eye, Mail, Pencil, Phone, Trash } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
 import ClientDetailsDialog from './CreateDetailsDialog';
-import ClientLedger from './ClientLedger';
 
 function Clients() {
   const dispatch = useDispatch();
@@ -114,10 +114,7 @@ function Clients() {
                   <span className="truncate">{client.mobile || 'N/A'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-fg-secondary">
-                  <span className="truncate">No of Department :</span>
-                </div>
-                <div className="flex items-center gap-2 text-fg-secondary">
-                  <span className="truncate">No of Services :</span>
+                  <span className="truncate">No of Services : {client.services.length}</span>
                 </div>
               </div>
 
@@ -126,7 +123,15 @@ function Clients() {
                   Created: {new Date(client.createdAt).toLocaleDateString()}
                 </div>
                 <div className="flex items-center">
-                  <ClientLedger client={{ ...client, departments: ["HR", "IT", "Finance"] }} />
+                  <Link
+                    to={buildOrgRoute(`/task-management/client-ledger/${client._id}`)}
+                    className={cn(
+                      buttonVariants({ variant: 'default', size: 'sm' }),
+                      'bg-color-primary text-white hover:bg-color-primary/90'
+                    )}
+                  >
+                    View Ledger
+                  </Link>
                 </div>
               </div>
             </CardContent>

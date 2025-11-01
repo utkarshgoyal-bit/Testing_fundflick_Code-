@@ -1,5 +1,5 @@
-import { Types } from "mongoose";
-import { z } from "zod";
+import { Types } from 'mongoose';
+import { z } from 'zod';
 
 export const addBranchReqValidation = z.object({
   name: z.string(),
@@ -12,8 +12,8 @@ export const addBranchReqValidation = z.object({
   parentBranch: z
     .string()
     .optional()
-    .refine((value) => value === undefined || Types.ObjectId.isValid(value), {
-      message: "${value} is not a valid ObjectId",
+    .refine(value => value === undefined || Types.ObjectId.isValid(value), {
+      message: '${value} is not a valid ObjectId',
     }),
 });
 export type AddBranchReqType = z.infer<typeof addBranchReqValidation>;
@@ -30,8 +30,8 @@ export const editBranchReqValidation = z.object({
   parentBranch: z
     .string()
     .optional()
-    .refine((value) => value === undefined || Types.ObjectId.isValid(value), {
-      message: "${value} is not a valid ObjectId",
+    .refine(value => value === undefined || Types.ObjectId.isValid(value), {
+      message: '${value} is not a valid ObjectId',
     }),
 });
 export type EditBranchReqType = z.infer<typeof editBranchReqValidation>;

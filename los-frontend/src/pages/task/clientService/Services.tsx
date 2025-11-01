@@ -33,7 +33,7 @@ function Services() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-base font-bold text-fg-primary truncate">{service.serviceName || '-'}</p>
-                    <p className="text-xs text-fg-secondary truncate">{service.departmentId.departmentName}</p>
+                    <p className="text-xs text-fg-secondary truncate">{service?.departments?.departmentName}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">

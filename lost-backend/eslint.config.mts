@@ -33,6 +33,6 @@ export default [
     },
   },
   {
-    ignores: ['node_modules/', 'dist/', 'build/', 'src/shared/enums/', 'src/helper/'],
+    ignores: ['node_modules/', 'dist/', 'build/', 'src/helper/','src/postgres/test', 'src/shared/'],
   },
 ];

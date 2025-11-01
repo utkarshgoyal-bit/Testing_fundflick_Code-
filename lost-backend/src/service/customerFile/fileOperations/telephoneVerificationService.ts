@@ -1,7 +1,7 @@
-import { Types } from "mongoose";
-import { User } from "../../../interfaces/user.interface";
-import CustomerFileSchema from "../../../models/customerFile";
-import { ERROR } from "../../../shared/enums";
+import { Types } from 'mongoose';
+import { LoginUser } from '../../../interfaces';
+import CustomerFileSchema from '../../../schema/customerFile';
+import { ERROR } from '../../../shared/enums';
 
 const telephoneVerificationService = async ({
   fileId,
@@ -11,7 +11,7 @@ const telephoneVerificationService = async ({
 }: {
   fileId: string;
   review: string;
-  loginUser: any;
+  loginUser: LoginUser;
   description: string;
 }) => {
   const file = await CustomerFileSchema.findOne({
@@ -21,11 +21,12 @@ const telephoneVerificationService = async ({
   if (!file) {
     throw ERROR.NOT_FOUND;
   }
-  file.teleVerificationReport = {
+  file.teleVerificationReports.push({
     review,
     description,
     verifiedBy: new Types.ObjectId(loginUser.employeeId),
-  };
+    verifiedAt: new Date().toISOString(),
+  });
   return await file.save();
 };
 

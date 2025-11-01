@@ -3,12 +3,11 @@ import { RootState } from '@/redux/store';
 import { Card, CardContent } from '@/components/ui/card';
 import PageHeader from '@/components/shared/pageHeader';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
-import {  setStatusFilter, setTaskActivePage, setTaskDialogOpen } from '@/redux/slices/tasks';
-import { Filter, Calendar } from 'lucide-react';
-import { FETCH_SCHEDULED_RECURRING_TASKS } from '@/redux/actions/types';
+import { setStatusFilter, setTaskActivePage } from '@/redux/slices/tasks';
+import { Calendar } from 'lucide-react';
+import { FETCH_BULK_TASKS } from '@/redux/actions/types';
 import { useEffect, useState } from 'react';
-import BulkTaskForm from './bulk';
+import NewBulkTask from './BulkTasks/NewBulkTask';
 import {
   Pagination,
   PaginationContent,
@@ -36,86 +35,80 @@ import ScheduleCards from './ScheduleCards';
 import { getOrganizationSettings } from '@/redux/slices/organizationConfigs/fetchOrganizationConfigs';
 const taskStatusOptions = [
   { label: 'All', value: 'all' },
-  { label: 'Recurring', value: 'recurring' },
+  { label: 'Scheduled', value: 'scheduled' },
   { label: 'Upcoming', value: 'upcoming' },
 ];
 export default function ManageTasks() {
   const dispatch = useDispatch();
-  const { taskDialogOpen, activeTab, activeFilter, statusFilter, activePage } = useSelector(
-    (state: RootState) => state.tasks
-  );
+  const { activeTab, activeFilter, statusFilter, activePage } = useSelector((state: RootState) => state.tasks);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState('');
   const orgSettings = useSelector(getOrganizationSettings);
-  const timezone = orgSettings?.timezone || 'Asia/Kolkata';
-  const formatDate = orgSettings?.dateFormat || 'DD/MM/YYYY';
+  const timezone = orgSettings.find(({ id }: { id: string }) => id === 'timezone')?.value || 'Asia/Kolkata';
+  const formatDate = orgSettings.find(({ id }: { id: string }) => id === 'formatDate')?.value || 'DD/MM/YYYY';
   useEffect(() => {
-    dispatch({ type: FETCH_SCHEDULED_RECURRING_TASKS });
+    dispatch({ type: FETCH_BULK_TASKS });
   }, [activeTab, dispatch, activeFilter, statusFilter, activePage]);
+
   const renderFilters = () => (
-    <div className="flex items-center gap-2 flex-wrap">
-      <div className="flex items-center gap-2 text-sm font-medium text-fg-tertiary">
-        <Filter size={16} />
-        <span>Filter by:</span>
+    <div className="flex items-center flex-wrap flex-col md:flex-row md:items-center justify-between gap-6 mb-6 pb-6 border-b border-fg-border">
+      <div className="flex-1 max-w-md">
+        <input
+          type="text"
+          placeholder="Search tasks"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+        />
       </div>
-  
-      <Select value={statusFilter} onValueChange={(value) => dispatch(setStatusFilter(value))}>
-        <SelectTrigger className="w-[180px] h-10 rounded-full">
-          <SelectValue placeholder="Filter By Status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectLabel>Filter By Status</SelectLabel>
-            {taskStatusOptions.map((status) => (
-              <SelectItem key={status.value} value={status.value}>
-                <I8nTextWrapper text={status.label} />
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn(
-              'justify-start text-left font-normal rounded-full h-10 px-4',
-              !selectedDate && 'text-muted-foreground'
-            )}
-          >
-            <Calendar className="mr-2 h-4 w-4" />
-            {selectedDate ? format(selectedDate, 'PPP') : <span>Pick a date</span>}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0">
-          <CalendarComponent mode="single" selected={selectedDate} onSelect={setSelectedDate} initialFocus />
-        </PopoverContent>
-      </Popover>
+      <div className="flex flex-row items-center gap-4">
+        <Select value={statusFilter} onValueChange={(value) => dispatch(setStatusFilter(value))}>
+          <SelectTrigger className="w-[120px] lg:w-[180px] h-10 rounded-full">
+            <SelectValue placeholder="Filter By Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Filter By Status</SelectLabel>
+              {taskStatusOptions.map((status) => (
+                <SelectItem key={status.value} value={status.value}>
+                  <I8nTextWrapper text={status.label} />
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                'justify-start text-left font-normal rounded-full h-10 px-4',
+                !selectedDate && 'text-muted-foreground'
+              )}
+            >
+              <Calendar className="mr-2 h-4 w-4" />
+              {selectedDate ? format(selectedDate, 'PPP') : <span>Pick a date</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <CalendarComponent mode="single" selected={selectedDate} onSelect={setSelectedDate} initialFocus />
+          </PopoverContent>
+        </Popover>
+      </div>
     </div>
   );
   return (
     <div className="p-6">
       <PageHeader
-        title="Manage Tasks"
-        subtitle="Here you can view, filter, and manage all your tasks."
-        actions={
-          <Dialog open={taskDialogOpen} onOpenChange={(open) => dispatch(setTaskDialogOpen(open))}>
-            <DialogTrigger>
-              <div className="pt-4">
-                <BulkTaskForm />
-              </div>
-            </DialogTrigger>
-          </Dialog>
-        }
+        title="manageBulkTasks"
+        subtitle="Manage, view, and filter all your scheduled tasks here."
+        actions={<NewBulkTask />}
       />
       <Card className="bg-color-surface border-fg-border shadow-sm overflow-hidden mt-6">
         <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6 pb-6 border-b border-fg-border">
-            {renderFilters()}
-          </div>
-          <div className="mt-6">
-            <ScheduleCards timezone={timezone} formatDate={formatDate} />
-            <AdvancedPagination />
-          </div>
+          {renderFilters()}
+          <ScheduleCards timezone={timezone} formatDate={formatDate} searchQuery={searchQuery} />
+          <AdvancedPagination />
         </CardContent>
       </Card>
     </div>

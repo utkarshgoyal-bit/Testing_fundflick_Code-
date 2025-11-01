@@ -1,25 +1,36 @@
-import { Request, Response } from "express";
-import { ZodError } from "zod";
-import { ApiResponseHandler, StatusCodes } from "../../../helper/responseHelper";
-import { CustomerBankService } from "../../../service/index";
-import { ERROR, SUCCESS } from "../../../shared/enums";
+import { Request, Response } from 'express';
+import { ZodError } from 'zod';
+import { ApiResponseHandler } from '../../../helper/responseHelper';
+import { CustomerBankService } from '../../../service/index';
+import { ERROR, SUCCESS, StatusCodes } from '../../../shared/enums';
 
 class CustomerBankController {
   addCustomerBank = async (req: Request, res: Response) => {
     try {
       const { body, params, loginUser } = req;
-      const customerFile = await CustomerBankService.addCustomerBank({ id: params.id, body, loginUser });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, customerFile, "Customer File " + SUCCESS.CREATED);
+      const customerFile = await CustomerBankService.addCustomerBank({
+        id: params.id,
+        body,
+        loginUser,
+      });
+      ApiResponseHandler.sendResponse(
+        res,
+        StatusCodes.OK,
+        customerFile,
+        'Customer File ' + SUCCESS.CREATED
+      );
     } catch (error) {
       // Type guard to check if error is an instance of Error
       if (error instanceof ZodError) {
-        const formattedErrors = error.errors?.map((err) => `${err.path.join(".")}: ${err.message}`).join("\n");
+        const formattedErrors = error.errors
+          ?.map(err => `${err.path.join('.')}: ${err.message}`)
+          .join('\n');
         return ApiResponseHandler.sendErrorResponse(res, formattedErrors, ERROR.BAD_REQUEST);
       }
 
       // Handle MongoDB duplicate key error (code 11000)
       if (error instanceof Error && (error as any).code === 11000) {
-        const duplicateField = Object.keys((error as any).keyValue).join(", ");
+        const duplicateField = Object.keys((error as any).keyValue).join(', ');
         return ApiResponseHandler.sendErrorResponse(
           res,
           ERROR.ALREADY_EXISTS,
@@ -43,10 +54,17 @@ class CustomerBankController {
         id,
         loginUser: req.loginUser,
       });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, customerFile, "Customer File " + SUCCESS.FETCHED);
+      ApiResponseHandler.sendResponse(
+        res,
+        StatusCodes.OK,
+        customerFile,
+        'Customer File ' + SUCCESS.FETCHED
+      );
     } catch (error: unknown) {
       if (error instanceof ZodError) {
-        const formattedErrors = error.errors.map((err) => `${err.path.join(".")}: ${err.message}`).join("\n");
+        const formattedErrors = error.errors
+          .map(err => `${err.path.join('.')}: ${err.message}`)
+          .join('\n');
         return ApiResponseHandler.sendErrorResponse(res, formattedErrors, ERROR.BAD_REQUEST);
       }
 

@@ -1,6 +1,14 @@
-import CollectionModel from "../../../models/collection/dataModel";
-import { Types } from "mongoose";
-const assignedCase = async ({ userId, caseNo, loginUser }: { userId: string; caseNo: string; loginUser: any }) => {
+import { Types } from 'mongoose';
+import CollectionModel from '../../../schema/collection/dataModel';
+const assignedCase = async ({
+  userId,
+  caseNo,
+  loginUser,
+}: {
+  userId: string;
+  caseNo: string;
+  loginUser: any;
+}) => {
   const data = await CollectionModel.findOneAndUpdate(
     { caseNo, organization: loginUser.organization._id },
     { assignedTo: new Types.ObjectId(userId) },
@@ -10,7 +18,7 @@ const assignedCase = async ({ userId, caseNo, loginUser }: { userId: string; cas
     }
   );
   if (!data) {
-    throw new Error("Case not found");
+    throw new Error('Case not found');
   } else {
     return true;
   }

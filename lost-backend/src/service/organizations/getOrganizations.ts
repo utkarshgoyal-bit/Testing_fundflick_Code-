@@ -1,4 +1,4 @@
-import OrganizationSchema from "../../models/organization";
+import OrganizationSchema from '../../schema/organization';
 
 const getOrganizations = async () => {
   const [Organizations, count] = await Promise.all([

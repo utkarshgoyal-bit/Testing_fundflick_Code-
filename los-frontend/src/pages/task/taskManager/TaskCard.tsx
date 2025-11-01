@@ -18,7 +18,7 @@ import { toFormatDate } from '@/helpers/dateFormater';
 import hasPermission from '@/helpers/hasPermission';
 import { PERMISSIONS } from '@/helpers/permissions';
 import { STATUS, TASK_STATUS } from '@/lib/enums';
-import { REPEAT_STATUS } from '@/lib/enums/task';
+import { REPEAT_STATUS, OVERDUE_COLOR_SCHEMA } from '@/lib/enums/task';
 import { ITaskTable } from '@/lib/interfaces';
 import { cn } from '@/lib/utils';
 import {
@@ -58,25 +58,29 @@ const priorityOfTask = {
   },
 };
 
-const getPriorityColor = (dueDate: string) => {
-  const daysDiff = moment(dueDate).diff(moment(), 'days');
-  if (daysDiff <= 1) return 'text-color-error';
-  if (daysDiff <= 3) return 'text-color-black';
-  return 'text-fg-secondary';
+const getOverdueColorSchema = (daysDiff: number) => {
+  if (daysDiff < -2) return OVERDUE_COLOR_SCHEMA.SEVERELY_OVERDUE;
+  if (daysDiff === -2) return OVERDUE_COLOR_SCHEMA.TWO_DAY_OVERDUE;
+  if (daysDiff === -1) return OVERDUE_COLOR_SCHEMA.ONE_DAY_OVERDUE;
+  if (daysDiff === 0) return OVERDUE_COLOR_SCHEMA.DUE_TODAY;
+  return OVERDUE_COLOR_SCHEMA.ON_TIME;
 };
 
 const taskName = (item: any) => {
-  return item?.type?.toLocaleLowerCase() === 'ca'
-    ? `Return: ${item?.returnName || item.serviceId?.serviceName}`
-    : item?.type?.toLocaleLowerCase() !== 'other'
-      ? camelToTitle(item?.type || '-')
-      : item?.title;
+  const tName =
+    item?.type?.toLocaleLowerCase() === 'ca' || item?.title
+      ? `${item?.returnName || item?.title || item.serviceId?.serviceName || item.title}`
+      : item?.type?.toLocaleLowerCase() !== 'other'
+        ? camelToTitle(item?.type || '-')
+        : item?.title;
+  return tName;
 };
 const TaskCard = ({
   item,
   userData,
   loggedInUserId,
   formatDate,
+  timezone,
   onMarkTaskAsCompletedHandler,
   onStopRepeatTaskHandler,
   onDeleteTaskHandler,
@@ -87,20 +91,21 @@ const TaskCard = ({
   userData: any;
   loggedInUserId: string;
   formatDate: string;
+  timezone: string;
   onMarkTaskAsCompletedHandler: (item: any) => void;
   onStopRepeatTaskHandler: (item: any) => void;
   onDeleteTaskHandler: (item: any) => void;
   onAcceptTaskHandler: (item: any) => void;
   onPinTaskHandler: (item: any) => void;
 }) => {
-  const dueDate = moment(item.startDate).add(item.dueAfterDays, 'days');
-  const isOverdue = dueDate.isBefore(moment());
-  const daysDiff = dueDate.diff(moment(), 'days');
+  const dueDate = moment(item.startDate).add(item.dueAfterDays, 'days').tz(timezone);
+  const isOverdue = dueDate.isBefore(moment().tz(timezone));
+  const daysDiff = dueDate.diff(moment().tz(timezone), 'days');
   const isCreatedUser = userData?.employment?._id === item?.createdBy?._id;
-  const isLoggedInUser = item?.users?.find((user: any) => user.employeeId === loggedInUserId);
-  const isAccepted = item.acceptedBy && item.status == TASK_STATUS.IN_PROGRESS;
+  const loggedInUser = item?.users?.find((user: any) => user.employeeId === loggedInUserId);
+  const allowToCompleteTask = loggedInUserId === item.acceptedBy && item.status == TASK_STATUS.IN_PROGRESS;
   let canAccept = false;
-  if (isLoggedInUser) {
+  if (loggedInUser) {
     canAccept = item.status == TASK_STATUS.PENDING || item.status == TASK_STATUS.UPCOMING;
   }
   const canRepeat = item.repeat !== REPEAT_STATUS.NO_REPEAT && hasPermission(PERMISSIONS.TASK_REPEAT);
@@ -150,17 +155,15 @@ const TaskCard = ({
 
             {/* Mobile Actions - Right Aligned */}
             <div className="flex flex-col gap-1.5 flex-shrink-0">
-              {
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 w-8 p-0 hover:bg-color-success/10 hover:text-color-success hover:border-color-success/30"
-                  onClick={() => onMarkTaskAsCompletedHandler(item)}
-                >
-                  <Pin className="h-3.5 w-3.5" />
-                </Button>
-              }
-              {isAccepted && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0 hover:bg-color-success/10 hover:text-color-success hover:border-color-success/30"
+                onClick={() => onMarkTaskAsCompletedHandler(item)}
+              >
+                <Pin className="h-3.5 w-3.5" />
+              </Button>
+              {allowToCompleteTask && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -192,7 +195,7 @@ const TaskCard = ({
                 </Button>
               )}
 
-              {canDelete && (
+              {canDelete && item.status !== TASK_STATUS.COMPLETED && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -220,16 +223,10 @@ const TaskCard = ({
               </div>
 
               <div
-                className={`flex items-center gap-1.5 px-2 py-1 rounded-lg ${
-                  isOverdue
-                    ? 'bg-color-error/10 border border-color-error/20'
-                    : daysDiff <= 1
-                      ? 'bg-color-warning/10 border border-color-warning/20'
-                      : 'bg-color-success/10 border border-color-success/20'
-                }`}
+                className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border ${getOverdueColorSchema(daysDiff)}`}
               >
-                <Calendar className={`h-3 w-3 ${getPriorityColor(dueDate.format())}`} />
-                <span className={`text-xs font-medium ${getPriorityColor(dueDate.format())}`}>
+                <Calendar className="h-3 w-3" />
+                <span className="text-xs font-medium">
                   {isOverdue
                     ? 'Overdue'
                     : daysDiff === 0
@@ -412,6 +409,20 @@ const TaskCard = ({
                     {priorityOfTask[item.priorityOfTask as keyof typeof priorityOfTask]?.label || '-'}
                   </span>
                 </div>
+                {item.status !== TASK_STATUS.COMPLETED && (
+                  <div className="flex items-center gap-1.5">
+                    <Scale className="h-3.5 w-3.5 text-fg-tertiary" />
+                    <span className="text-xs text-fg-tertiary">Due at:</span>
+                    <span
+                      className={cn(
+                        'px-2 py-0.5 rounded-full text-xs font-medium border',
+                        getOverdueColorSchema(daysDiff)
+                      )}
+                    >
+                      {item.dueDateInMessage}
+                    </span>
+                  </div>
+                )}
 
                 {item.caseNo && (
                   <div className="flex items-center gap-1.5">
@@ -535,13 +546,11 @@ const TaskCard = ({
             </div>
           </div>
 
-          {/* Right Side - Actions */}
           <div className="flex items-center gap-2 ml-4 flex-wrap">
-            {
-              <Button variant="ghost" onClick={() => onPinTaskHandler(item)}>
-                {item.isPinned ? <Pin className="h-4 w-4 text-success" /> : <PinOff className="h-4 w-4 " />}
-              </Button>
-            }
+            <Button variant="ghost" onClick={() => onPinTaskHandler(item)}>
+              {item.isPinned ? <Pin className="h-4 w-4 text-success" /> : <PinOff className="h-4 w-4 " />}
+            </Button>
+
             {isUnderReview && (
               <Button
                 variant="outline"
@@ -552,7 +561,7 @@ const TaskCard = ({
                 Approve
               </Button>
             )}
-            {isAccepted && (
+            {allowToCompleteTask && (
               <Button variant="ghost" onClick={() => onMarkTaskAsCompletedHandler(item)}>
                 <CheckCircle2 className="h-4 w-4 text-color-success" />
               </Button>
@@ -569,7 +578,7 @@ const TaskCard = ({
               </Button>
             )}
 
-            {canDelete && (
+            {canDelete && item.status !== TASK_STATUS.COMPLETED && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="ghost" size="sm" className="hover:bg-color-error/10 hover:text-color-error">
@@ -630,7 +639,6 @@ const TaskCard = ({
         </div>
       </div>
 
-      {/* Comments & Timeline Tabs */}
       <div className="border-t border-fg-border bg-color-surface-muted/50 px-3 sm:px-4 py-2 sm:py-3">
         <Tabs defaultValue="comments" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
@@ -643,7 +651,7 @@ const TaskCard = ({
             </TabsTrigger>
             <TabsTrigger value="timeline" className="flex items-center gap-2">
               <CalendarClock className="h-4 w-4" />
-              Timeline{' '}
+              Timeline
               <span className="text-fg-tertiary inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full border border-fg-border bg-fg-primary/5">
                 {item.timeline?.length > 9 ? '9+' : item.timeline?.length}
               </span>
@@ -662,7 +670,7 @@ const TaskCard = ({
             <Timeline
               timelineData={item.timeline?.map((timeline) => ({
                 content: timeline.comment,
-                date: toFormatDate({ date: timeline.createdAt, toFormat: formatDate }),
+                date: toFormatDate({ date: timeline.createdAt, toFormat: formatDate, timeZone: timezone }),
                 title: '',
                 name: timeline.createdByName && `By : ${timeline.createdByName || ''}`,
               }))}

@@ -3,7 +3,7 @@ name: Deploy dev-backend
 on:
   push:
     branches:
-      - dev 
+      - dev
 
 jobs:
   deploy:
@@ -42,7 +42,7 @@ jobs:
           git clone https://github.com/Maitrii-Infotech/lost-backend.git
           cd lost-backend
           git checkout dev
-          
+
           # Create .env file
           cat <<EOT > .env
           PORT=8000
@@ -65,9 +65,11 @@ jobs:
           SMS_API_KEY=${{ secrets.SMS_API_KEY }}
           SMS_API_ROUTE=${{ secrets.SMS_API_ROUTE }}
           FIREBASE_SERVICE_ACCOUNT=${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          POSTGRES_URL=${{ secrets.POSTGRES_URL }}
           EOT
 
           pnpm install
+          npx prisma generate
           pnpm run build
           pm2 start "npm start" --name dev-backend
           pm2 save

@@ -1,30 +1,50 @@
-import mongoose from "mongoose";
-import { v4 as uuidv4 } from "uuid";
-import { encrypt } from "../../helper/encrypt";
-import { User } from "../../interfaces/user.interface";
-import { EmployeeSchema, UserSchema } from "../../models";
-import OrganizationSchema from "../../models/organization";
-import { ERROR, ROLES, STATUS } from "../../shared/enums";
-
+import moment from 'moment-timezone';
+import mongoose from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+import { encrypt } from '../../helper/encrypt';
+import { LoginUser } from '../../interfaces';
+import { EmployeeSchema, UserSchema } from '../../schema';
+import OrganizationSchema from '../../schema/organization';
+import { ERROR, ROLES, STATUS } from '../../shared/enums';
 export const generateUniqueOrgId = async (name: string): Promise<string> => {
   const baseId = name
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9\s_-]+|[\s_]+/g, (match) => (match.match(/[\s_]+/) ? "-" : ""));
+    .replace(/[^a-z0-9\s_-]+|[\s_]+/g, match => (match.match(/[\s_]+/) ? '-' : ''));
 
   const isBaseIdTaken = await OrganizationSchema.exists({ id: baseId });
   if (!isBaseIdTaken) return baseId;
 
   const regex = new RegExp(`^${baseId}-(\\d+)$`);
-  const existingOrgs = await OrganizationSchema.find({ id: regex }, { id: 1 }).sort({ id: -1 }).limit(1);
+  const existingOrgs = await OrganizationSchema.find({ id: regex }, { id: 1 })
+    .sort({ id: -1 })
+    .limit(1);
 
   if (!existingOrgs.length) return `${baseId}-1`;
 
-  const lastSuffix = parseInt(existingOrgs[0].id.split("-").pop() || "0", 10);
+  const lastSuffix = parseInt(existingOrgs[0].id.split('-').pop() || '0', 10);
   return `${baseId}-${lastSuffix + 1}`;
 };
 
-const addOrganization = async ({ data, loginUser }: { data: any; loginUser: User }) => {
+const addOrganization = async ({
+  data,
+  loginUser,
+}: {
+  data: {
+    name: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    addressLine1?: string;
+    country?: string;
+    state?: string;
+    mobile?: string;
+    status: STATUS;
+    modules: string[];
+    dob?: number;
+  };
+  loginUser: LoginUser;
+}) => {
   if (!data.name || !data.email) throw ERROR.BAD_REQUEST;
 
   const session = await mongoose.startSession();
@@ -54,13 +74,14 @@ const addOrganization = async ({ data, loginUser }: { data: any; loginUser: User
       organization: organization[0]._id,
       createdBy: loginUser.employeeId,
       role: ROLES.SUPERADMIN,
-      sex: "Other",
-      dob: new Date().toISOString().split("T")[0],
-      maritalStatus: "Single",
+      sex: 'Other',
+      dob: data.dob ? moment(data.dob).unix() : null,
+      maritalStatus: 'Single',
       addressLine1: data.addressLine1,
       country: data.country,
       state: data.state,
       mobile: data.mobile,
+      joiningDate: moment().unix(),
     };
 
     const [employee] = await EmployeeSchema.create([employeePayload], {
@@ -69,7 +90,7 @@ const addOrganization = async ({ data, loginUser }: { data: any; loginUser: User
 
     const userPayload = {
       employeeId: employee._id,
-      password: await encrypt(process.env.DEFAULT_PASSWORD || "OrgAdmin@123"),
+      password: await encrypt(process.env.DEFAULT_PASSWORD || 'OrgAdmin@123'),
       role: ROLES.SUPERADMIN,
       organizations: [organization[0]._id],
       isActive: true,

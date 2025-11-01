@@ -1,7 +1,7 @@
-import { Types } from "mongoose";
-import { uploadFileToS3 } from "../../../../aws/s3";
-import customerFileSchema from "../../../../models/customerFile";
-import { ERROR } from "../../../../shared/enums";
+import { Types } from 'mongoose';
+import { uploadFileToS3 } from '../../../../aws/s3';
+import customerFileSchema from '../../../../schema/customerFile';
+import { ERROR } from '../../../../shared/enums';
 
 const addExistingLoan = async ({
   body,
@@ -26,7 +26,7 @@ const addExistingLoan = async ({
   if (files?.length) {
     photo = await uploadFileToS3(
       files[0].path,
-      `${customerFile.loanApplicationNumber}/${"liability-photo" + new Date()}`,
+      `${customerFile.loanApplicationNumber}/${'liability-photo' + new Date()}`,
       files[0].mimetype
     );
   }

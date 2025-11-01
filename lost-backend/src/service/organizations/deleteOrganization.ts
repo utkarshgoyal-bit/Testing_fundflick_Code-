@@ -1,5 +1,5 @@
-import OrganizationSchema from "../../models/organization";
-import { STATUS } from "../../shared/enums";
+import OrganizationSchema from '../../schema/organization';
+import { STATUS } from '../../shared/enums';
 
 const deleteOrganization = async ({ id }: { id: string }) => {
   const organization = await OrganizationSchema.findOneAndUpdate(

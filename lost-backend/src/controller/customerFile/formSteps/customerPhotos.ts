@@ -1,8 +1,8 @@
-import { Request, Response } from "express";
-import { ZodError } from "zod";
-import { ApiResponseHandler, StatusCodes } from "../../../helper/responseHelper";
-import { CustomerPhotosService } from "../../../service/index";
-import { ERROR, SUCCESS } from "../../../shared/enums";
+import { Request, Response } from 'express';
+import { ZodError } from 'zod';
+import { ApiResponseHandler } from '../../../helper/responseHelper';
+import { CustomerPhotosService } from '../../../service/index';
+import { ERROR, SUCCESS, StatusCodes } from '../../../shared/enums';
 
 class CustomerPhotoController {
   addCustomerPhoto = async (req: Request, res: Response) => {
@@ -17,17 +17,24 @@ class CustomerPhotoController {
         body,
         loginUser,
       });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, customerFile, "Customer File " + SUCCESS.CREATED);
+      ApiResponseHandler.sendResponse(
+        res,
+        StatusCodes.OK,
+        customerFile,
+        'Customer File ' + SUCCESS.CREATED
+      );
     } catch (error) {
       console.log(error);
       if (error instanceof ZodError) {
-        const formattedErrors = error.errors.map((err) => `${err.path.join(".")}: ${err.message}`).join("\n");
+        const formattedErrors = error.errors
+          .map(err => `${err.path.join('.')}: ${err.message}`)
+          .join('\n');
         return ApiResponseHandler.sendErrorResponse(res, formattedErrors, ERROR.BAD_REQUEST);
       }
 
       // Handle MongoDB duplicate key error (code 11000)
       if (error instanceof Error && (error as any).code === 11000) {
-        const duplicateField = Object.keys((error as any).keyValue).join(", ");
+        const duplicateField = Object.keys((error as any).keyValue).join(', ');
         return ApiResponseHandler.sendErrorResponse(
           res,
           ERROR.ALREADY_EXISTS,
@@ -47,19 +54,30 @@ class CustomerPhotoController {
   deleteCustomerPhotos = async (req: Request, res: Response) => {
     try {
       const { body, loginUser, params } = req;
-      const customerFile = await CustomerPhotosService.deleteCustomerPhotos({ body, id: params.id, loginUser });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, customerFile, "Customer File " + SUCCESS.CREATED);
+      const customerFile = await CustomerPhotosService.deleteCustomerPhotos({
+        body,
+        id: params.id,
+        loginUser,
+      });
+      ApiResponseHandler.sendResponse(
+        res,
+        StatusCodes.OK,
+        customerFile,
+        'Customer File ' + SUCCESS.CREATED
+      );
     } catch (error) {
       console.log(error);
       // Type guard to check if error is an instance of Error
       if (error instanceof ZodError) {
-        const formattedErrors = error.errors.map((err) => `${err.path.join(".")}: ${err.message}`).join("\n");
+        const formattedErrors = error.errors
+          .map(err => `${err.path.join('.')}: ${err.message}`)
+          .join('\n');
         return ApiResponseHandler.sendErrorResponse(res, formattedErrors, ERROR.BAD_REQUEST);
       }
 
       // Handle MongoDB duplicate key error (code 11000)
       if (error instanceof Error && (error as any).code === 11000) {
-        const duplicateField = Object.keys((error as any).keyValue).join(", ");
+        const duplicateField = Object.keys((error as any).keyValue).join(', ');
         return ApiResponseHandler.sendErrorResponse(
           res,
           ERROR.ALREADY_EXISTS,
@@ -79,19 +97,29 @@ class CustomerPhotoController {
   getCustomerPhotos = async (req: Request, res: Response) => {
     try {
       const { params, loginUser } = req;
-      const customerFile = await CustomerPhotosService.getCustomerPhotos({ id: params.id, loginUser });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, customerFile, "Customer File " + SUCCESS.CREATED);
+      const customerFile = await CustomerPhotosService.getCustomerPhotos({
+        id: params.id,
+        loginUser,
+      });
+      ApiResponseHandler.sendResponse(
+        res,
+        StatusCodes.OK,
+        customerFile,
+        'Customer File ' + SUCCESS.CREATED
+      );
     } catch (error) {
       console.log(error);
       // Type guard to check if error is an instance of Error
       if (error instanceof ZodError) {
-        const formattedErrors = error.errors.map((err) => `${err.path.join(".")}: ${err.message}`).join("\n");
+        const formattedErrors = error.errors
+          .map(err => `${err.path.join('.')}: ${err.message}`)
+          .join('\n');
         return ApiResponseHandler.sendErrorResponse(res, formattedErrors, ERROR.BAD_REQUEST);
       }
 
       // Handle MongoDB duplicate key error (code 11000)
       if (error instanceof Error && (error as any).code === 11000) {
-        const duplicateField = Object.keys((error as any).keyValue).join(", ");
+        const duplicateField = Object.keys((error as any).keyValue).join(', ');
         return ApiResponseHandler.sendErrorResponse(
           res,
           ERROR.ALREADY_EXISTS,

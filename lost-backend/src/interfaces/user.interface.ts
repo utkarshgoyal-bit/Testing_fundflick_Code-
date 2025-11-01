@@ -1,8 +1,14 @@
-import { Types } from "mongoose";
+import { Types } from 'mongoose';
 
 export interface User {
   organization: string;
-  organizations: Array<{ name: string; _id: string; status: string; isActive: boolean; id: string }>;
+  organizations: Array<{
+    name: string;
+    _id: string;
+    status: string;
+    isActive: boolean;
+    id: string;
+  }>;
   employeeId: string;
   roleRef: {
     name: string;

@@ -15,6 +15,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "@prisma/client": "^6.15.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/body-parser": "^1.19.5",
     "@types/morgan": "^1.9.9",
@@ -33,6 +34,7 @@
     "express-mongo-sanitize": "^2.2.0",
     "firebase-admin": "^13.2.0",
     "helmet": "^7.1.0",
+    "immutable": "^5.1.3",
     "jsonwebtoken": "^9.0.2",
     "libreoffice": "^0.4.5",
     "libreoffice-convert": "^1.6.0",
@@ -46,7 +48,9 @@
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.15",
     "number-precision": "^1.6.0",
+    "pg": "^8.16.3",
     "pizzip": "^3.1.7",
+    "prisma": "^6.15.0",
     "socket.io": "^4.8.1",
     "swagger-ui-express": "^5.0.1",
     "tesseract.js": "^5.1.1",
@@ -70,6 +74,7 @@
     "@types/node": "^22.5.5",
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^6.4.16",
+    "@types/pg": "^8.15.5",
     "@types/uuid": "^10.0.0",
     "@types/validator": "^13.12.2",
     "@typescript-eslint/eslint-plugin": "^8.30.1",
@@ -93,17 +98,18 @@
     "dev": "nodemon --exec ts-node src/index.ts",
     "build": "NODE_OPTIONS='--max-old-space-size=4096' tsc",
     "start": "node dist/index.js",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.{ts} --fix",
-    "lint:check": "eslint src/**/*.{ts} --max-warnings 0",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:check": "eslint .",
     "prepare": "husky",
     "test": "echo \"Error: no test specified\" && exit 1",
     "format": "prettier --write \"src/**/*.{ts,json,md}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,json,md}\""
+    "format:check": "prettier --check \"src/**/*.{ts,json,md}\"",
+    "reset-task-counter": "ts-node src/routes/scripts/resetTaskCounter.ts"
   },
   "lint-staged": {
     "*.{js,ts,tsx,jsx}": [
-      "eslint --fix",
+      "eslint --fix ",
       "prettier --write"
     ],
     "*.{json,md,yml,yaml}": [

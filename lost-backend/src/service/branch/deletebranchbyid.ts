@@ -1,5 +1,5 @@
-import { Types } from "mongoose";
-import BranchSchema from "../../models/branches";
+import { Types } from 'mongoose';
+import BranchSchema from '../../schema/branches';
 
 const deleteBranch = async ({ id, loginUser }: { id: string; loginUser: any }) => {
   const isUpdated = await BranchSchema.findOneAndUpdate(
@@ -13,7 +13,7 @@ const deleteBranch = async ({ id, loginUser }: { id: string; loginUser: any }) =
   if (!isUpdated) {
     throw {
       error: {
-        message: "Branch not found",
+        message: 'Branch not found',
         statusCode: 404,
       },
     };

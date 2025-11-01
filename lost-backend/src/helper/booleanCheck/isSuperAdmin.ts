@@ -1,4 +1,4 @@
-import { ROLES } from "../../shared/enums";
+import { ROLES } from '../../shared/enums';
 const isSuperAdmin = (roles?: string[]) => {
   if (!roles) return false;
   return roles.includes(ROLES.SUPERADMIN);

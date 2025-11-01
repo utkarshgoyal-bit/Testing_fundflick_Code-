@@ -1,15 +1,16 @@
-import { Request, Response } from "express";
-import { ZodError } from "zod";
-import { ApiResponseHandler, StatusCodes } from "../../helper/responseHelper";
-import { UsersServices } from "../../service/index";
-import { ERROR, SUCCESS } from "../../shared/enums";
-import addUserReqValidation from "./validations";
-import { isTrue } from "../../helper/booleanCheck";
+import { Request, Response } from 'express';
+import { ZodError } from 'zod';
+import { isTrue } from '../../helper/booleanCheck';
+import { ApiResponseHandler } from '../../helper/responseHelper';
+import { UsersServices } from '../../service/index';
+import { ERROR, SUCCESS, StatusCodes } from '../../shared/enums';
+import addUserReqValidation from './validations';
 
 class UsersController {
-  getUser = async (req: Request, res: Response) => {
+  getUsers = async (req: Request, res: Response) => {
     try {
-      const { query: { isBlocked, branchName, other: isOther, isAllowSelfUser } = {}, loginUser } = req;
+      const { query: { isBlocked, branchName, other: isOther, isAllowSelfUser } = {}, loginUser } =
+        req;
       let users = [];
       if (isOther) {
         users = await UsersServices.getUsers({
@@ -25,7 +26,7 @@ class UsersController {
           isAllowSelfUser: isTrue(isAllowSelfUser as string),
         });
       }
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, users, "User " + SUCCESS.FETCHED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, users, 'User ' + SUCCESS.FETCHED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -33,9 +34,9 @@ class UsersController {
   getUserById = async (req: Request, res: Response) => {
     try {
       const loginUser = req.loginUser;
-      const { params: { id = "" } = {} } = req;
+      const { params: { id = '' } = {} } = req;
       const users = await UsersServices.getUserById({ loginUser, id });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, users, "User " + SUCCESS.FETCHED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, users, 'User ' + SUCCESS.FETCHED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -48,7 +49,7 @@ class UsersController {
         body: validatedReq,
         loginUser: req.loginUser,
       });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, user, "User " + SUCCESS.CREATED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, user, 'User ' + SUCCESS.CREATED);
     } catch (error) {
       if (error instanceof ZodError) {
         return ApiResponseHandler.sendErrorResponse(res, error.errors, ERROR.BAD_REQUEST);
@@ -61,10 +62,14 @@ class UsersController {
     try {
       const validatedReq = addUserReqValidation.parse(req.body);
       const user = await UsersServices.editUser({ body: validatedReq, loginUser: req.loginUser });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, user, "User " + SUCCESS.UPDATED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, user, 'User ' + SUCCESS.UPDATED);
     } catch (error) {
       if (error instanceof ZodError) {
-        return ApiResponseHandler.sendErrorResponse(res, JSON.stringify(error.errors), ERROR.BAD_REQUEST);
+        return ApiResponseHandler.sendErrorResponse(
+          res,
+          JSON.stringify(error.errors),
+          ERROR.BAD_REQUEST
+        );
       }
       ApiResponseHandler.sendErrorResponse(res, JSON.stringify(error), ERROR.BAD_REQUEST);
     }
@@ -74,7 +79,7 @@ class UsersController {
     try {
       const { id } = req.body;
       const user = await UsersServices.blockUser({ id, loginUser: req.loginUser });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, user, "User " + SUCCESS.BLOCKED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, user, 'User ' + SUCCESS.BLOCKED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -84,7 +89,7 @@ class UsersController {
     try {
       const { id } = req.body;
       const user = await UsersServices.unblockUser({ id, loginUser: req.loginUser });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, user, "User " + SUCCESS.UNBLOCKED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, user, 'User ' + SUCCESS.UNBLOCKED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -92,7 +97,10 @@ class UsersController {
 
   receiveLedgerBalance = async (req: Request, res: Response) => {
     try {
-      const user = await UsersServices.receiveLedgerBalance({ body: req.body, loginUser: req.loginUser });
+      const user = await UsersServices.receiveLedgerBalance({
+        body: req.body,
+        loginUser: req.loginUser,
+      });
       ApiResponseHandler.sendResponse(res, StatusCodes.OK, user, SUCCESS.RECEIVED_LEDGER_BALANCE);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
@@ -100,11 +108,7 @@ class UsersController {
   };
   saveFcmToken = async (req: Request, res: Response) => {
     try {
-      const user = await UsersServices.saveFcmToken({
-        token: req.body.token,
-        loginUser: req.loginUser,
-      });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, { success: true }, "Ok");
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, { success: true }, 'Ok');
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -114,7 +118,7 @@ class UsersController {
       const user = await UsersServices.getUserDetails({
         loginUser: req.loginUser,
       });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, user, "Ok");
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, user, 'Ok');
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }

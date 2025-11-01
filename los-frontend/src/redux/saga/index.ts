@@ -80,6 +80,7 @@ import {
   taskComment,
   acceptTask,
   pinTask,
+  createBulkTaskSaga,
 } from './tasks';
 
 import { deleteQuestion, editQuestion, fetchQuestions, registerNewQuestion } from './televerification';
@@ -132,6 +133,9 @@ import { addClient, deleteClient, editClient, getClients, getClientById } from '
 import { addDepartment, deleteDepartment, editDepartment, getDepartments } from './tasks/department';
 import { fetchOrganizationConfigs } from './organizationConfigs';
 import fetchTasksDashboard from './tasks/fetchDashboard.saga';
+import getClientLedger from './tasks/clientLedger/getClientLedger';
+import getClientLedgerById from './tasks/clientLedger/getClientLedgerById';
+import updateClientLedger from './tasks/clientLedger/updateClientLedgerStatus';
 export default function* rootSaga() {
   const sagas = [
     fetchServicesById,
@@ -280,11 +284,15 @@ export default function* rootSaga() {
     fetchUsersDetails,
     watchFlagCaseSaga,
     pinTask,
+    createBulkTaskSaga,
     createLoanSaga,
     watchFetchLoans,
     fetchAllLoansStatistics,
     watchFetchLoanById,
     fetchOrganizationConfigs,
+    getClientLedger,
+    getClientLedgerById,
+    updateClientLedger,
   ];
 
   yield all(sagas.map((saga) => fork(saga)));

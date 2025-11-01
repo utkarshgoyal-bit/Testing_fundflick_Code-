@@ -9,8 +9,8 @@ const getStatusDot = (status: string): string => {
     case TASK_STATUS.COMPLETED:
       return 'bg-color-success';
     case TASK_STATUS.UPCOMING:
-      return 'text-color-upcoming  border-color-upcoming';
-    case TASK_STATUS.RECURRING:
+      return 'bg-color-upcoming';
+    case TASK_STATUS.SCHEDULED:
       return 'bg-color-recurring';
     default:
       return 'bg-fg-border';

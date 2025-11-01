@@ -26,7 +26,7 @@ function* fetchUsersDataSaga(action: {
     if (action.payload.isFetchClients) {
       yield put({ type: FETCH_CLIENTS })
     }
-    const response: ApiResponse<IUserTable[]> = yield call(apiCaller, '/user', 'GET', +query);
+    const response: ApiResponse<IUserTable[]> = yield call(apiCaller, `/user${query}`, 'GET');
     if (response.data) {
       yield put(setData(response.data));
     } else if (response.error) {

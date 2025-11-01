@@ -1,5 +1,5 @@
-import { Types } from "mongoose";
-import UserSchema from "../../models/auth";
+import { Types } from 'mongoose';
+import UserSchema from '../../schema/auth';
 const receiveLedgerBalance = async ({
   body,
   loginUser,
@@ -19,7 +19,7 @@ const receiveLedgerBalance = async ({
     user.ledgerBalanceHistory.push({
       date: new Date(),
       ledgerBalance: body.amount,
-      type: "credit",
+      type: 'credit',
       remarks: `Rs. ${body.amount} received in organization balance`,
     });
     await user.save();

@@ -1,5 +1,5 @@
-import { Types } from "mongoose";
-import UserSchema from "../../models/auth";
+import { Types } from 'mongoose';
+import UserSchema from '../../schema/auth';
 
 const saveFcmToken = async ({ token, loginUser }: { token: string; loginUser: any }) => {
   const user = await UserSchema.findOne({

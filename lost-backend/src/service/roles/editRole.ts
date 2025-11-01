@@ -1,5 +1,5 @@
-import RolesSchema from "../../models/roles";
-import { Types } from "mongoose";
+import { Types } from 'mongoose';
+import RolesSchema from '../../schema/roles';
 
 const editRole = async ({ id, data, loginUser }: { data: any; id: string; loginUser: any }) => {
   const role = await RolesSchema.findOneAndUpdate(

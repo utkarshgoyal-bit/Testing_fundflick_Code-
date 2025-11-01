@@ -1,12 +1,12 @@
-import { Types } from "mongoose";
-import { uploadFileToS3 } from "../../../../aws/s3";
-import { User } from "../../../../interfaces/user.interface";
-import { EmployeeSchema } from "../../../../models";
-import customerFileSchema from "../../../../models/customerFile";
-import customerSchema from "../../../../models/customerFile/customers";
-import { ERROR, STEPS_NAMES } from "../../../../shared/enums";
-import CustomerFileStatusNotification from "../../../../socket/sendNotification";
-import { v4 as uuidv4 } from "uuid";
+/* eslint-disable no-undef */
+import { Types } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+import { uploadFileToS3 } from '../../../../aws/s3';
+import { EmployeeSchema } from '../../../../schema';
+import customerFileSchema from '../../../../schema/customerFile';
+import customerSchema from '../../../../schema/customerFile/customers';
+import { ERROR, STEPS_NAMES } from '../../../../shared/enums';
+import CustomerFileStatusNotification from '../../../../socket/sendNotification';
 const addCustomerAssociate = async ({
   fileId,
   body,
@@ -24,18 +24,20 @@ const addCustomerAssociate = async ({
       _id: fileId,
       organization: loginUser.organization._id,
     })
-    .populate("customerDetails")
-    .populate("customerOtherFamilyDetails.customerDetails")
+    .populate('customerDetails')
+    .populate('customerOtherFamilyDetails.customerDetails')
     .lean();
   if (!isCustomerFileExist) {
     throw ERROR.NOT_FOUND;
   }
   if (
     isCustomerFileExist.customerOtherFamilyDetails.find(
-      (item: any) => item.customerDetails?.aadhaarNumber === body.associate.customerDetails.aadhaarNumber
+      (item: any) =>
+        item.customerDetails?.aadhaarNumber === body.associate.customerDetails.aadhaarNumber
     ) ||
     body.associate.customerDetails.aadhaarNumber ===
-      (typeof isCustomerFileExist.customerDetails === "object" && "aadhaarNumber" in isCustomerFileExist.customerDetails
+      (typeof isCustomerFileExist.customerDetails === 'object' &&
+      'aadhaarNumber' in isCustomerFileExist.customerDetails
         ? (isCustomerFileExist.customerDetails as { aadhaarNumber?: string }).aadhaarNumber
         : undefined)
   ) {
@@ -45,17 +47,17 @@ const addCustomerAssociate = async ({
     for (const file of files as Express.Multer.File[]) {
       const fieldname = file.fieldname;
 
-      if (body.associate && fieldname === "associate[customerDetails][uidFront]") {
+      if (body.associate && fieldname === 'associate[customerDetails][uidFront]') {
         const uploadResult = await uploadFileToS3(
           file.path,
-          `${isCustomerFileExist.loanApplicationNumber}/${"associate-uidFront" + new Date()}`,
+          `${isCustomerFileExist.loanApplicationNumber}/${'associate-uidFront' + new Date()}`,
           file.mimetype
         );
         body.associate.customerDetails.uidFront = uploadResult;
-      } else if (body.associate && fieldname === "associate[customerDetails][uidBack]") {
+      } else if (body.associate && fieldname === 'associate[customerDetails][uidBack]') {
         const uploadResult = await uploadFileToS3(
           file.path,
-          `${isCustomerFileExist.loanApplicationNumber}/${"associate-uidBack" + new Date()}`,
+          `${isCustomerFileExist.loanApplicationNumber}/${'associate-uidBack' + new Date()}`,
           file.mimetype
         );
         body.associate.customerDetails.uidBack = uploadResult;
@@ -65,10 +67,10 @@ const addCustomerAssociate = async ({
           const subField = match[1];
           const uploadResult = await uploadFileToS3(
             file.path,
-            `${isCustomerFileExist.loanApplicationNumber}/${"associate-other" + new Date()}`,
+            `${isCustomerFileExist.loanApplicationNumber}/${'associate-other' + new Date()}`,
             file.mimetype
           );
-          const index = parseInt(fieldname.match(/\d+/)?.[0] ?? "0");
+          const index = parseInt(fieldname.match(/\d+/)?.[0] ?? '0');
           if (!photosPaths[index]) photosPaths[index] = {};
           photosPaths[index][subField] = uploadResult;
         }
@@ -106,7 +108,7 @@ const addCustomerAssociate = async ({
     relation,
     address,
   };
-  let isStepExist = isCustomerFileExist.stepsDone.includes(STEPS_NAMES.ASSOCIATE);
+  const isStepExist = isCustomerFileExist.stepsDone.includes(STEPS_NAMES.ASSOCIATE);
   if (!isStepExist) {
     isCustomerFileExist.stepsDone.push(STEPS_NAMES.ASSOCIATE);
   }
@@ -134,18 +136,20 @@ const addCustomerAssociate = async ({
   if (!customerFile) {
     throw ERROR.NOT_FOUND;
   }
-  const loginUserDetails = await EmployeeSchema.findOne({ _id: new Types.ObjectId(loginUser.employeeId) }).lean();
+  const loginUserDetails = await EmployeeSchema.findOne({
+    _id: new Types.ObjectId(loginUser.employeeId),
+  }).lean();
   if (!loginUserDetails) {
     throw ERROR.USER_NOT_FOUND;
   }
-  if (customerFile.status !== "Pending") {
+  if (customerFile.status !== 'Pending') {
     CustomerFileStatusNotification({
       loanApplicationNumber: customerFile.loanApplicationNumber,
       creator: customerFile.createdBy,
       customerFileId: customerFile._id,
       updater: loginUser,
       message: {
-        message: `${loginUserDetails.firstName + " " + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role}) has updated Associates details of the file`,
+        message: `${loginUserDetails.firstName + ' ' + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role}) has updated Associates details of the file`,
         title: `File FI-${customerFile.loanApplicationNumber} Associates details is updated `,
       },
       organization: loginUser.organization._id,

@@ -1,6 +1,6 @@
-import customerFileSchema from "../../../../models/customerFile";
-import { ERROR } from "../../../../shared/enums";
-import { filesCommonSelectedData } from "../../main";
+import customerFileSchema from '../../../../schema/customerFile';
+import { ERROR } from '../../../../shared/enums';
+import { filesCommonSelectedData } from '../../main';
 
 const getCustomerLiability = async ({ id, loginUser }: { id: string; loginUser: any }) => {
   const customerFile = await customerFileSchema
@@ -8,11 +8,12 @@ const getCustomerLiability = async ({ id, loginUser }: { id: string; loginUser: 
       _id: id,
       organization: loginUser.organization._id,
     })
-    .populate("existingLoans.customerDetails")
-    .populate<{ customerDetails: any; customerOtherFamilyDetails: { customerDetails: any; customerType: string }[] }>(
-      "customerDetails"
-    )
-    .populate("customerOtherFamilyDetails.customerDetails")
+    .populate('existingLoans.customerDetails')
+    .populate<{
+      customerDetails: any;
+      customerOtherFamilyDetails: { customerDetails: any; customerType: string }[];
+    }>('customerDetails')
+    .populate('customerOtherFamilyDetails.customerDetails')
     .select({
       familyExpenses: 1,
       existingLoans: 1,
@@ -23,7 +24,7 @@ const getCustomerLiability = async ({ id, loginUser }: { id: string; loginUser: 
   if (!customerFile) {
     throw ERROR.NOT_FOUND;
   }
-  const allFamilyMembers = customerFile?.customerOtherFamilyDetails.map((item) => {
+  const allFamilyMembers = customerFile?.customerOtherFamilyDetails.map(item => {
     return {
       firstName: item.customerDetails.firstName,
       middleName: item.customerDetails.middleName,
@@ -36,10 +37,10 @@ const getCustomerLiability = async ({ id, loginUser }: { id: string; loginUser: 
     firstName: customerFile?.customerDetails.firstName,
     middleName: customerFile?.customerDetails.middleName,
     lastName: customerFile?.customerDetails.lastName,
-    customerType: "Self",
+    customerType: 'Self',
     _id: customerFile?.customerDetails._id,
   });
-  const { customerOtherFamilyDetails, ...responseData } = customerFile.toObject();
+  const { ...responseData } = customerFile.toObject();
   return { ...responseData, allFamilyMembers };
 };
 export default getCustomerLiability;

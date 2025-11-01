@@ -1,10 +1,9 @@
-import { Types } from "mongoose";
-import { uploadFileToS3 } from "../../../aws/s3";
-import { User } from "../../../interfaces/user.interface";
-import { EmployeeSchema } from "../../../models";
-import CustomerFileSchema from "../../../models/customerFile";
-import { ERROR } from "../../../shared/enums";
-import CustomerFileStatusNotification from "../../../socket/sendNotification";
+import { Types } from 'mongoose';
+import { uploadFileToS3 } from '../../../aws/s3';
+import { EmployeeSchema } from '../../../schema';
+import CustomerFileSchema from '../../../schema/customerFile';
+import { ERROR } from '../../../shared/enums';
+import CustomerFileStatusNotification from '../../../socket/sendNotification';
 
 const updateCustomerCibilScore = async ({
   fileId,
@@ -32,11 +31,11 @@ const updateCustomerCibilScore = async ({
     throw ERROR.USER_NOT_FOUND;
   }
   if (files) {
-    const { "cibilDetails[file]": cibilFile } = files;
+    const { 'cibilDetails[file]': cibilFile } = files;
     if (cibilFile) {
       const file = await uploadFileToS3(
         cibilFile[0].path,
-        `${customerFile.loanApplicationNumber}/${"cibilFile" + new Date()}`,
+        `${customerFile.loanApplicationNumber}/${'cibilFile' + new Date()}`,
         cibilFile[0].mimetype
       );
       body.cibilDetails.file = file;
@@ -59,7 +58,7 @@ const updateCustomerCibilScore = async ({
     customerFileId: customerFile._id,
     updater: loginUser,
     message: {
-      message: `${loginUserDetails.firstName + " " + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role}) has updated cibil score on file`,
+      message: `${loginUserDetails.firstName + ' ' + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role}) has updated cibil score on file`,
       title: `File FI-${customerFile.loanApplicationNumber} cibil score is updated`,
     },
     organization: loginUser.organization._id,

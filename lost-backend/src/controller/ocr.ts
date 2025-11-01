@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { ApiResponseHandler, StatusCodes } from '../helper/responseHelper';
-import { ERROR } from '../shared/enums';
-import Logger from '../lib/logger';
 import { loadOCR } from '../helper/ocr';
+import { ApiResponseHandler } from '../helper/responseHelper';
 import { OCRResponse } from '../interfaces/index';
+import Logger from '../lib/logger';
+import { ERROR, StatusCodes } from '../shared/enums';
 
 async function ocrController(req: Request, res: Response) {
   try {

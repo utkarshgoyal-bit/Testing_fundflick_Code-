@@ -1,5 +1,5 @@
-import { Types } from "mongoose";
-import TelephoneQuestionSchema from "../../models/telephoneQuestions";
+import { Types } from 'mongoose';
+import TelephoneQuestionSchema from '../../schema/telephoneQuestions';
 
 const deleteTelephoneQuestion = async ({ id, loginUser }: { id: string; loginUser: any }) => {
   const deletedTelephoneQuestion = await TelephoneQuestionSchema.findOneAndUpdate(
@@ -14,7 +14,7 @@ const deleteTelephoneQuestion = async ({ id, loginUser }: { id: string; loginUse
     }
   );
   if (!deletedTelephoneQuestion) {
-    throw "Telephone Question not found";
+    throw 'Telephone Question not found';
   }
   return deletedTelephoneQuestion;
 };

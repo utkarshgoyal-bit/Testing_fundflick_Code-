@@ -1,18 +1,23 @@
-import customerFileSchema from "../../../../models/customerFile";
-import { ERROR } from "../../../../shared/enums";
-import { filesCommonSelectedData } from "../../main";
+import customerFileSchema from '../../../../schema/customerFile';
+import { ERROR } from '../../../../shared/enums';
+import { filesCommonSelectedData } from '../../main';
 const getCustomerCollateral = async ({ id, loginUser }: { id: string; loginUser: any }) => {
   const customerFile = await customerFileSchema
     .findOne({
       _id: id,
       organization: loginUser.organization._id,
     })
-    .populate("collateralDetails.vehicleDetails.vehicleDetails")
+    .populate('collateralDetails.vehicleDetails.vehicleDetails')
     .populate<{
       customerDetails: any;
-      customerOtherFamilyDetails: { customerDetails: any; customerType: string; relation: string; address: object }[];
-    }>("customerDetails")
-    .populate("customerOtherFamilyDetails.customerDetails")
+      customerOtherFamilyDetails: {
+        customerDetails: any;
+        customerType: string;
+        relation: string;
+        address: object;
+      }[];
+    }>('customerDetails')
+    .populate('customerOtherFamilyDetails.customerDetails')
     .select({
       customerOtherFamilyDetails: 1,
       customerDetails: 1,
@@ -25,7 +30,7 @@ const getCustomerCollateral = async ({ id, loginUser }: { id: string; loginUser:
   if (!customerFile) {
     throw ERROR.USER_NOT_FOUND;
   }
-  const allFamilyMembers = customerFile?.customerOtherFamilyDetails.map((item) => {
+  const allFamilyMembers = customerFile?.customerOtherFamilyDetails.map(item => {
     return {
       firstName: item.customerDetails.firstName,
       middleName: item.customerDetails.middleName,
@@ -39,12 +44,14 @@ const getCustomerCollateral = async ({ id, loginUser }: { id: string; loginUser:
     firstName: customerFile?.customerDetails.firstName,
     middleName: customerFile?.customerDetails.middleName,
     lastName: customerFile?.customerDetails.lastName,
-    customerType: "self",
-    relation: "self",
+    customerType: 'self',
+    relation: 'self',
     _id: customerFile?.customerDetails._id,
   });
 
-  const familyAddresses = customerFile.customerOtherFamilyDetails.map((item) => item.address).filter(Boolean);
+  const familyAddresses = customerFile.customerOtherFamilyDetails
+    .map(item => item.address)
+    .filter(Boolean);
 
   let mergedAddresses: any[] = [];
   if (Array.isArray(customerFile.address)) {
@@ -55,7 +62,7 @@ const getCustomerCollateral = async ({ id, loginUser }: { id: string; loginUser:
     mergedAddresses = [...familyAddresses];
   }
 
-  const { customerOtherFamilyDetails, ...responseData } = customerFile;
+  const { ...responseData } = customerFile;
   return { ...responseData, address: mergedAddresses, allFamilyMembers };
 };
 

@@ -1,6 +1,6 @@
 import apiCaller, { ApiResponse } from '@/helpers/apiHelper';
 import { ITaskTable } from '@/lib/interfaces/tables';
-import { FETCH_SCHEDULED_RECURRING_TASKS } from '@/redux/actions/types';
+import { FETCH_BULK_TASKS } from '@/redux/actions/types';
 import { setLoading } from '@/redux/slices/publicSlice';
 import { setData, setError, setTotalTasks } from '@/redux/slices/tasks';
 import { RootState } from '@/redux/store';
@@ -38,5 +38,5 @@ function* fetchScheduledRecurringTasksSaga(action: {
 }
 
 export default function* fetchScheduledRecurringTasks() {
-  yield takeEvery(FETCH_SCHEDULED_RECURRING_TASKS, fetchScheduledRecurringTasksSaga);
+  yield takeEvery(FETCH_BULK_TASKS, fetchScheduledRecurringTasksSaga);
 }

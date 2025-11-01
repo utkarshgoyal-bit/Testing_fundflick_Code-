@@ -1,9 +1,9 @@
-import { Types } from "mongoose";
-import { User } from "../../../interfaces/user.interface";
-import { EmployeeSchema } from "../../../models";
-import CustomerFileSchema from "../../../models/customerFile";
-import { ERROR } from "../../../shared/enums";
-import CustomerFileStatusNotification from "../../../socket/sendNotification";
+import { Types } from 'mongoose';
+import { FILE_STATUS } from '../../../enums/file.enum';
+import { EmployeeSchema } from '../../../schema';
+import CustomerFileSchema from '../../../schema/customerFile';
+import { ERROR } from '../../../shared/enums';
+import CustomerFileStatusNotification from '../../../socket/sendNotification';
 
 const updateCustomerFileStatus = async ({
   loanApplicationNumber,
@@ -26,7 +26,7 @@ const updateCustomerFileStatus = async ({
   if (!loginUserDetails) {
     throw ERROR.USER_NOT_FOUND;
   }
-  if (status == "Review") {
+  if (status == FILE_STATUS.REVIEW) {
     const customerFile = await CustomerFileSchema.findOneAndUpdate(
       { loanApplicationNumber, organization: loginUser.organization._id },
       { status, salesManReport: data },
@@ -42,14 +42,14 @@ const updateCustomerFileStatus = async ({
       updater: loginUser,
       message: {
         message: `${
-          loginUserDetails.firstName + " " + loginUserDetails.lastName
+          loginUserDetails.firstName + ' ' + loginUserDetails.lastName
         }(${loginUser.roleRef?.name || loginUser.role}) has send for reviewed the customer file`,
         title: `File FI-${loanApplicationNumber} status updated to ${status.toLocaleLowerCase()}`,
       },
       organization: loginUser.organization._id,
     });
   }
-  if (status == "Approved" || status == "Rejected") {
+  if (status == FILE_STATUS.APPROVED || status == FILE_STATUS.REJECTED) {
     const customerFile = await CustomerFileSchema.findOne({
       loanApplicationNumber,
       organization: loginUser.organization._id,
@@ -57,7 +57,10 @@ const updateCustomerFileStatus = async ({
     if (!customerFile) {
       throw ERROR.USER_NOT_FOUND;
     }
-    if (customerFile.status === "Approved" || customerFile.status === "Rejected") {
+    if (
+      customerFile.status === FILE_STATUS.APPROVED ||
+      customerFile.status === FILE_STATUS.REJECTED
+    ) {
       throw ERROR.INVALID_OPERATION;
     }
     customerFile.status = status;
@@ -73,15 +76,15 @@ const updateCustomerFileStatus = async ({
       customerFileId: customerFile._id,
       updater: loginUser,
       message: {
-        message: `${loginUserDetails.firstName + " " + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role}) has reviewed the customer file`,
+        message: `${loginUserDetails.firstName + ' ' + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role}) has reviewed the customer file`,
         title: `File FI-${loanApplicationNumber} status updated to ${status.toLocaleLowerCase()},${
-          status == "Approved" ? "Please  collect file payment" : ""
+          status == FILE_STATUS.APPROVED ? 'Please  collect file payment' : ''
         }`,
       },
       organization: loginUser.organization._id,
     });
   }
-  if (status == "Task Pending") {
+  if (status == FILE_STATUS.TASK_PENDING) {
     const customer = await CustomerFileSchema.findOne({
       loanApplicationNumber,
       organization: loginUser.organization._id,
@@ -89,7 +92,7 @@ const updateCustomerFileStatus = async ({
     if (!customer) {
       throw ERROR.USER_NOT_FOUND;
     }
-    if (customer.status === "Approved" || customer.status === "Rejected") {
+    if (customer.status === FILE_STATUS.APPROVED || customer.status === FILE_STATUS.REJECTED) {
       throw ERROR.INVALID_OPERATION;
     }
     customer.status = status;
@@ -100,7 +103,7 @@ const updateCustomerFileStatus = async ({
       customerFileId: customer._id,
       updater: loginUser,
       message: {
-        message: `${loginUserDetails.firstName + " " + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role}) has reviewed the customer file`,
+        message: `${loginUserDetails.firstName + ' ' + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role}) has reviewed the customer file`,
         title: `File FI-${loanApplicationNumber} status updated to ${status.toLocaleLowerCase()}`,
       },
       organization: loginUser.organization._id,

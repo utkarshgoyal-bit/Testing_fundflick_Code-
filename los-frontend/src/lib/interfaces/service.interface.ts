@@ -2,7 +2,6 @@ export interface IServiceFormValues {
   serviceName: string;
   departmentId: string;
   description: string;
-  frequency: string;
   startDate: string;
   dueAfter: string;
 }

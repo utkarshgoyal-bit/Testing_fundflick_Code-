@@ -1,4 +1,4 @@
-import CollectionModel from "../../../models/collection/dataModel";
+import CollectionModel from '../../../schema/collection/dataModel';
 const unAssignCase = async (caseNo: string, loginUser: any): Promise<boolean> => {
   const data = await CollectionModel.findOneAndUpdate(
     { caseNo, organization: loginUser.organization._id },
@@ -6,7 +6,7 @@ const unAssignCase = async (caseNo: string, loginUser: any): Promise<boolean> =>
     { new: true }
   );
   if (!data) {
-    throw new Error("Case not found");
+    throw new Error('Case not found');
   }
   return true;
 };

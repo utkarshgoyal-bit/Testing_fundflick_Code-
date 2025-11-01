@@ -1,5 +1,5 @@
-import customerFileSchema from "../../../../models/customerFile";
-import { filesCommonSelectedData } from "../../main";
+import customerFileSchema from '../../../../schema/customerFile';
+import { filesCommonSelectedData } from '../../main';
 
 const getCustomerAddress = async ({ id, loginUser }: { id: string; loginUser: any }) => {
   const customerFile = await customerFileSchema

@@ -1,6 +1,6 @@
-import { Types } from "mongoose";
-import CustomerFileSchema from "../../../models/customerFile";
-import { ERROR } from "../../../shared/enums";
+import { Types } from 'mongoose';
+import CustomerFileSchema from '../../../schema/customerFile';
+import { ERROR } from '../../../shared/enums';
 
 const fileVerificationService = async ({
   fileId,
@@ -21,7 +21,7 @@ const fileVerificationService = async ({
     throw ERROR.NOT_FOUND;
   }
   if (file.verifiedSteps.length) {
-    let existingFile = file.verifiedSteps.find((item: any) => item.step == step);
+    const existingFile = file.verifiedSteps.find(item => item.step === step);
     if (existingFile) {
       existingFile.step = step;
       existingFile.isVerified = isVerified;

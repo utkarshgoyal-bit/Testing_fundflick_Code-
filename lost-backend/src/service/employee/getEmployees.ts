@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import EmployeeSchema from '../../models/employee';
+import EmployeeSchema from '../../schema/employee';
 
 const getEmployees = async ({ loginUser }: { loginUser: any }) => {
   const projections = {

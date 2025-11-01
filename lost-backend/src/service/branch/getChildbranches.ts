@@ -1,12 +1,12 @@
-import { Types } from "mongoose";
-import BranchSchema from "../../models/branches";
+import { Types } from 'mongoose';
+import BranchSchema from '../../schema/branches';
 
 // Step 1: Recursive tree builder
 const buildNestedTree = (rootId: string, branches: any[]) => {
   const map = new Map<string, any>();
 
   // Initialize each branch with minimal fields and empty children
-  branches.forEach((branch) => {
+  branches.forEach(branch => {
     map.set(branch._id.toString(), {
       _id: branch._id,
       name: branch.name,
@@ -15,7 +15,7 @@ const buildNestedTree = (rootId: string, branches: any[]) => {
   });
 
   // Connect children as objects
-  branches.forEach((branch) => {
+  branches.forEach(branch => {
     const parent = map.get(branch._id.toString());
 
     if (branch.children?.length) {
@@ -39,11 +39,11 @@ const getChildBranch = async (parentId: string, loginUser: any) => {
     },
     {
       $graphLookup: {
-        from: "branchesv2",
-        startWith: "$children",
-        connectFromField: "children",
-        connectToField: "_id",
-        as: "allChildren",
+        from: 'branchesv2',
+        startWith: '$children',
+        connectFromField: 'children',
+        connectToField: '_id',
+        as: 'allChildren',
         restrictSearchWithMatch: { IS_DELETED: false },
       },
     },
@@ -54,12 +54,12 @@ const getChildBranch = async (parentId: string, loginUser: any) => {
         children: 1,
         allChildren: {
           $map: {
-            input: "$allChildren",
-            as: "branch",
+            input: '$allChildren',
+            as: 'branch',
             in: {
-              _id: "$$branch._id",
-              name: "$$branch.name",
-              children: "$$branch.children",
+              _id: '$$branch._id',
+              name: '$$branch.name',
+              children: '$$branch.children',
             },
           },
         },
@@ -72,7 +72,10 @@ const getChildBranch = async (parentId: string, loginUser: any) => {
   const root = result[0];
 
   // Merge root and all its descendants into one list
-  const allBranches = [{ _id: root._id, name: root.name, children: root.children }, ...root.allChildren];
+  const allBranches = [
+    { _id: root._id, name: root.name, children: root.children },
+    ...root.allChildren,
+  ];
 
   // Return nested tree
   return buildNestedTree(parentId, allBranches);

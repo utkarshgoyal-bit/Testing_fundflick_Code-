@@ -1,10 +1,17 @@
-import { Types } from "mongoose";
-import { User } from "../../interfaces/user.interface";
-import TasksSchema from "../../models/tasks";
-import { ERROR } from "../../shared/enums";
-import { TasksUpdateNotification } from "../../socket/sendNotification";
+import { Types } from 'mongoose';
+import { LoginUser } from '../../interfaces';
+import { IAddTaskPayload } from '../../interfaces/task.interface';
+import TasksSchema from '../../schema/tasks';
+import { ERROR } from '../../shared/enums';
+import { TasksUpdateNotification } from '../../socket/sendNotification';
 
-export default async function updateTask({ body, loginUser }: { body: any; loginUser: any }) {
+export default async function updateTask({
+  body,
+  loginUser,
+}: {
+  body: IAddTaskPayload & { _id: string };
+  loginUser: LoginUser;
+}) {
   const { _id, ...payload } = body;
   const updatedTask = await TasksSchema.findOneAndUpdate(
     {
@@ -22,8 +29,8 @@ export default async function updateTask({ body, loginUser }: { body: any; login
   }
   await TasksUpdateNotification({
     users: [
-      ...updatedTask.users.map((user: any) =>
-        user instanceof Types.ObjectId || typeof user === "string" ? user : user.userDetails
+      ...updatedTask.users.map(user =>
+        user instanceof Types.ObjectId || typeof user === 'string' ? user : user.employeeId
       ),
       updatedTask.createdBy,
     ],
@@ -36,7 +43,7 @@ export default async function updateTask({ body, loginUser }: { body: any; login
         updatedTask.description ? `Note: ${updatedTask.description}` : null,
       ]
         .filter(Boolean)
-        .join(", "),
+        .join(', '),
     },
     organization: loginUser.organization._id,
   });

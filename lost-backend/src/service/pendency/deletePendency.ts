@@ -1,7 +1,6 @@
-import { Types } from "mongoose";
-import { User } from "../../interfaces/user.interface";
-import { PendencySchema } from "../../models";
-import { ERROR } from "../../shared/enums";
+import { Types } from 'mongoose';
+import { PendencySchema } from '../../schema';
+import { ERROR } from '../../shared/enums';
 
 async function deletePendency({ loginUser, body }: { loginUser: any; body: any }) {
   const { _id } = body;

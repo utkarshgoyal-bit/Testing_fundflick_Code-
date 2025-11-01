@@ -7,22 +7,34 @@ import { setActiveFilter, setStatusFilter, setTaskActivePage, setTaskDialogOpen 
 import { getOrganizationSettings } from '@/redux/slices/organizationConfigs/fetchOrganizationConfigs';
 import { isTrue } from '@/helpers/booleanCheck';
 import { ITaskFormType } from './formSchema';
-const index = () => {
+const Index = () => {
   const dispatch = useDispatch();
   const { activeTab, taskDialogOpen, activeFilter, statusFilter, activePage, total } = useSelector(
     (state: RootState) => state.tasks
   );
 
   const organizationConfigs = useSelector(getOrganizationSettings);
-
   const hideTaskHeading = isTrue(organizationConfigs.find(({ id }: { id: string }) => id === 'hideTaskHeading')?.value);
   const timezone = organizationConfigs.find(({ id }: { id: string }) => id === 'timezone')?.value || 'Asia/Kolkata';
   const formatDate = organizationConfigs.find(({ id }: { id: string }) => id === 'formatDate')?.value || 'DD-MM-YYYY';
+  const reFetchingTaskInterval = Number(
+    organizationConfigs.find(({ id }: { id: string }) => id === 'reFetchingTaskInterval')?.value || '0'
+  );
   const isCAType = isTrue(organizationConfigs.find(({ id }: { id: string }) => id === 'isCAType')?.value || 'false');
 
   useEffect(() => {
     dispatch({ type: FETCH_TASKS_DATA });
   }, [activeTab, dispatch, activeFilter, statusFilter, activePage]);
+
+  useEffect(() => {
+    if (reFetchingTaskInterval > 0) {
+      const pollingInterval = setInterval(() => {
+        dispatch({ type: FETCH_TASKS_DATA, payload: { silent: true } });
+      }, reFetchingTaskInterval);
+
+      return () => clearInterval(pollingInterval);
+    }
+  }, [dispatch, reFetchingTaskInterval]);
 
   const onSetActiveFilterHandler = (value: string) => {
     dispatch(setActiveFilter(value));
@@ -39,6 +51,9 @@ const index = () => {
   const onAddTaskHandler = (payload: ITaskFormType) => {
     dispatch({ type: ADD_TASK, payload: payload });
   };
+  const onRefreshHandler = () => {
+    dispatch({ type: FETCH_TASKS_DATA });
+  };
 
   return (
     <TaskManager
@@ -49,14 +64,16 @@ const index = () => {
       onSetTaskDialogOpenHandler={onSetTaskDialogOpenHandler}
       onSetActivePageHandler={onSetActivePageHandler}
       onAddTaskHandler={onAddTaskHandler}
+      onRefreshHandler={onRefreshHandler}
       total={total}
       activePage={activePage}
       hideTaskHeading={hideTaskHeading}
       timezone={timezone}
       formatDate={formatDate}
       isCAType={isCAType}
+      activeFilter={activeFilter}
     />
   );
 };
 
-export default index;
+export default Index;

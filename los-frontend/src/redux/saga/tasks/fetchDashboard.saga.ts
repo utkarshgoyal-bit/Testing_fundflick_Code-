@@ -8,13 +8,14 @@ function* fetchTasksDashboardSaga(action: {
   type: string;
   payload: {
     type: 'team' | 'individual';
+    incompleteTasksFilter: 'pending' | 'inProgress';
   };
 }) {
   try {
     yield put(setLoading({ loading: true, message: 'Fetching tasks...' }));
     const response: ApiResponse<{ data: ITaskTable[]; total: number }> = yield call(
       apiCaller,
-      `/tasks/dashboard?type=${action.payload.type}`
+      `/tasks/dashboard?type=${action.payload.type}&incompleteTasksFilter=${action.payload.incompleteTasksFilter}`
     );
     const { data: tasks } = response;
     if (tasks?.data) {

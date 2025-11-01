@@ -1,7 +1,7 @@
-import { ApiResponseHandler, StatusCodes } from '../helper/responseHelper';
-import { ERROR, SUCCESS } from '../shared/enums';
-import { Request, Response } from 'express';
 import axios from 'axios';
+import { Request, Response } from 'express';
+import { ApiResponseHandler } from '../helper/responseHelper';
+import { ERROR, StatusCodes, SUCCESS } from '../shared/enums';
 const data = JSON.stringify({
   ifsc: 'HDFC0000314',
 });

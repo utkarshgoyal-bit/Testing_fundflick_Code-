@@ -1,10 +1,10 @@
-import { Types } from "mongoose";
-import { UserSchema } from "../../../models";
-import CustomerFileSchema from "../../../models/customerFile";
-import checkPermission from "../../../lib/permissions/checkPermission";
-import { ERROR, ROLES } from "../../../shared/enums";
-import { PERMISSIONS } from "../../../shared/enums/permissions";
-import isSuperAdmin from "../../../helper/booleanCheck/isSuperAdmin";
+import { Types } from 'mongoose';
+import isSuperAdmin from '../../../helper/booleanCheck/isSuperAdmin';
+import checkPermission from '../../../lib/permissions/checkPermission';
+import { UserSchema } from '../../../schema';
+import CustomerFileSchema from '../../../schema/customerFile';
+import { ERROR, ROLES } from '../../../shared/enums';
+import { PERMISSIONS } from '../../../shared/enums/permissions';
 
 const fileHandlersService = async ({ fileId, loginUser }: { fileId: string; loginUser: any }) => {
   const file = await CustomerFileSchema.findOne({
@@ -13,7 +13,7 @@ const fileHandlersService = async ({ fileId, loginUser }: { fileId: string; logi
   if (!file) {
     throw ERROR.USER_NOT_FOUND;
   }
-  const _isSuperAdmin = isSuperAdmin([loginUser?.role || ""]);
+  const _isSuperAdmin = isSuperAdmin([loginUser?.role || '']);
 
   const [_canViewSelf, _canViewBranch] = await Promise.all([
     checkPermission(loginUser, PERMISSIONS.CUSTOMER_FILE_VIEW_SELF),
@@ -41,8 +41,8 @@ const fileHandlersService = async ({ fileId, loginUser }: { fileId: string; logi
     $or: [{ ...query }, { employeeId: new Types.ObjectId(file.createdBy) }],
   };
   const users = await UserSchema.find(query)
-    .populate("employeeId", ["_id", "firstName", "lastName"])
-    .populate("roleRef", ["_id", "name"])
+    .populate('employeeId', ['_id', 'firstName', 'lastName'])
+    .populate('roleRef', ['_id', 'name'])
     .sort({ createdAt: -1 })
     .select({
       employeeId: 1,

@@ -1,21 +1,21 @@
 import { Types } from 'mongoose';
 import { io, onlineUsers } from '..';
 import { default as Logger, default as logger } from '../lib/logger';
-import NotificationModel from '../models/notification';
+import NotificationModel from '../schema/notification';
 
 export default function setupSocketServer() {
   io.on('connection', socket => {
     socket.on(
       'join',
-      async ({ userId, organization }: { userId: string; organization: string }) => {
-        if (!userId || !userId.length) {
+      async ({ employeeId, organization }: { employeeId: string; organization: string }) => {
+        if (!employeeId || !employeeId.length) {
           return;
         }
-        onlineUsers[userId] = socket.id;
+        onlineUsers[employeeId] = socket.id;
 
         try {
           const notifications = await NotificationModel.find({
-            employeeId: new Types.ObjectId(userId),
+            employeeId: new Types.ObjectId(employeeId),
             organization: new Types.ObjectId(organization),
           }).sort({ createdAt: -1 });
           socket.emit('getAllNotifications', notifications);
@@ -30,7 +30,7 @@ export default function setupSocketServer() {
         await NotificationModel.updateOne(
           { _id: new Types.ObjectId(_id) },
           { $set: { readStatus: true } },
-          { upsert: false, new: true }
+          { upsert: false }
         );
       } catch (error) {
         logger.error('error in markAsRead:', error);

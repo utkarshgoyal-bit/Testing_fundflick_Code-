@@ -1,5 +1,5 @@
-import { Types } from "mongoose";
-import CollectionModel from "../../../../models/collection/dataModel";
+import { Types } from 'mongoose';
+import CollectionModel from '../../../../schema/collection/dataModel';
 const deleteCaseRemark = async ({
   caseNo,
   remarkId,
@@ -10,7 +10,7 @@ const deleteCaseRemark = async ({
   loginUser: any;
 }) => {
   if (!caseNo) {
-    throw new Error("Case number is required");
+    throw new Error('Case number is required');
   }
   const data = await CollectionModel.findOneAndUpdate(
     { caseNo, organization: loginUser.organization._id },
@@ -18,7 +18,7 @@ const deleteCaseRemark = async ({
     { new: true, upsert: false }
   );
   if (!data) {
-    throw new Error("Case not found");
+    throw new Error('Case not found');
   }
   return true;
 };

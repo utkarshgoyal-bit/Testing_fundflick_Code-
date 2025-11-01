@@ -23,7 +23,7 @@ import hasPermission from '@/helpers/hasPermission';
 import { PERMISSIONS } from '@/helpers/permissions';
 import { cn } from '@/lib/utils';
 import I8nTextWrapper from '@/translations/i8nTextWrapper';
-import { Filter, ListTodo } from 'lucide-react';
+import { Filter, ListTodo, RefreshCw } from 'lucide-react';
 import { Helmet } from 'react-helmet';
 import { NewTask } from './newTask';
 import TaskCards from './taskCards';
@@ -45,6 +45,7 @@ export default function TaskManager({
   onSetStatusFilterHandler,
   onSetActivePageHandler,
   onAddTaskHandler,
+  onRefreshHandler,
 }: {
   activeFilter?: string;
   statusFilter?: string;
@@ -60,45 +61,66 @@ export default function TaskManager({
   onSetTaskDialogOpenHandler: (value: boolean) => void;
   onSetActivePageHandler: (value: number) => void;
   onAddTaskHandler: (payload: ITaskFormType) => void;
+  onRefreshHandler: () => void;
 }) {
   const renderFilters = () => (
-    <div className="flex items-center gap-2 flex-wrap">
-      <div className="flex items-center gap-2 text-sm font-medium text-fg-tertiary">
-        <Filter size={16} />
-        <span>Filter by:</span>
-      </div>
-      {FILTER_BY_ASSIGN_OPTIONS.map((status) => (
-        <Button
-          key={status.value}
-          variant="ghost"
-          className={cn(
-            'group rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-300 border',
-            activeFilter === status.value
-              ? 'bg-color-primary text-fg-inverse border-color-primary shadow-lg scale-105'
-              : 'border-fg-border text-fg-secondary hover:bg-color-surface-muted hover:border-fg-primary'
-          )}
-          onClick={() => onSetActiveFilterHandler(status?.value || '')}
-        >
-          <I8nTextWrapper text={status.label} />
-          {activeFilter === status.value && <span className="ml-2 h-2 w-2 rounded-full bg-fg-inverse animate-pulse" />}
-        </Button>
-      ))}
-      <Select value={statusFilter} onValueChange={(value) => onSetStatusFilterHandler(value)}>
-        <SelectTrigger className="w-[180px] h-10 rounded-full">
-          <SelectValue placeholder="Filter By Status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectLabel>Filter By Status</SelectLabel>
+    <div className="flex items-center justify-between gap-4 flex-wrap w-full">
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 text-sm font-medium text-fg-tertiary">
+          <Filter size={16} />
+          <span>Filter by:</span>
+        </div>
+        {FILTER_BY_ASSIGN_OPTIONS.map((status) => (
+          <Button
+            key={status.value}
+            variant="ghost"
+            className={cn(
+              'group rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-300 border',
+              activeFilter === status.value
+                ? 'bg-color-primary text-fg-inverse border-color-primary shadow-lg scale-105'
+                : 'border-fg-border text-fg-secondary hover:bg-color-surface-muted hover:border-fg-primary'
+            )}
+            onClick={() => onSetActiveFilterHandler(status?.value || '')}
+          >
+            <I8nTextWrapper text={status.label} />
+            {activeFilter === status.value && (
+              <span className="ml-2 h-2 w-2 rounded-full bg-fg-inverse animate-pulse" />
+            )}
+          </Button>
+        ))}
+        <Select value={statusFilter} onValueChange={(value) => onSetStatusFilterHandler(value)}>
+          <SelectTrigger className="w-[180px] h-10 rounded-full">
+            <SelectValue placeholder="Filter By Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Filter By Status</SelectLabel>
 
-            {TASK_STATUS_OPTIONS.map((status) => (
-              <SelectItem key={status.value} value={status.value}>
-                <I8nTextWrapper text={status.label} />
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+              {TASK_STATUS_OPTIONS.map((status) => (
+                <SelectItem key={status.value} value={status.value}>
+                  <I8nTextWrapper text={status.label} />
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 text-sm font-medium text-fg-secondary bg-color-surface-muted px-3 py-2 rounded-full border border-fg-border">
+          <span>Total Tasks:</span>
+          <span className="font-semibold text-color-primary">{total}</span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onRefreshHandler}
+          className="border-fg-border hover:bg-color-surface-muted"
+          title="Refresh tasks"
+        >
+          <RefreshCw className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 
@@ -136,7 +158,7 @@ export default function TaskManager({
             {renderFilters()}
           </div>
           <div className="mt-6">
-            <TaskCards formatDate={formatDate} />
+            <TaskCards formatDate={formatDate} timezone={timezone} />
             <AdvancedPagination onSetActivePageHandler={onSetActivePageHandler} activePage={activePage} total={total} />
           </div>
         </CardContent>

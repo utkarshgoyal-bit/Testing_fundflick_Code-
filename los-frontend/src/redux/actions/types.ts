@@ -44,6 +44,12 @@ export const FETCH_CLIENT_BY_ID = 'client/fetchById';
 export const EDIT_CLIENT = 'client/edit';
 export const DELETE_CLIENT = 'client/delete';
 
+export const CLIENT_LEDGER = 'clientLedger';
+export const FETCH_CLIENT_LEDGER_BY_ID = 'clientLedger/fetchById';
+export const DOWNLOAD_CLIENT_LEDGER = 'clientLedger/download';
+export const UPDATE_CLIENT_LEDGER = 'clientLedger/update';
+export const FETCH_CLIENT_LEDGER = 'clientLedger/fetch';
+
 export const DEPARTMENT = 'department';
 export const ADD_DEPARTMENT = 'department/add';
 export const FETCH_DEPARTMENTS = 'department/fetch';
@@ -56,7 +62,7 @@ export const TASKS_DASHBOARD = 'tasks_dashboard';
 export const FETCH_TASKS_DATA = 'tasks/fetchData';
 export const FETCH_TASKS_DASHBOARD_DATA = 'tasks/fetchDashboardData';
 export const FETCH_TASKS_DATA_SILENT = 'tasks/fetchData_silent';
-export const FETCH_SCHEDULED_RECURRING_TASKS = 'tasks/fetchScheduledRecurringTasks';
+export const FETCH_BULK_TASKS = 'tasks/fetchScheduledRecurringTasks';
 export const ADD_TASK = 'tasks/create';
 export const EDIT_TASK = 'tasks/edit';
 export const UPDATE_SCHEDULED_RECURRING_TASK = 'tasks/updateScheduledRecurring';
@@ -201,3 +207,5 @@ export const RESET_LOAN_STATE = 'loan/resetState';
 
 // Organization Config Actions
 export const FETCH_ORGANIZATION_CONFIGS = 'organizationConfigs/fetchAll';
+
+export const CREATE_BULK_TASK = 'task/createBulk';

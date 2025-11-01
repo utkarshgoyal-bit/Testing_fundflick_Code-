@@ -12,6 +12,8 @@ import taskComment from './taskComment.saga';
 import acceptTask from './acceptTask.saga';
 import pinTask from './pinTask.saga';
 import fetchTaskDashboard from './fetchDashboard.saga';
+import createBulkTaskSaga from './bulkTasks/createBulkTasks.saga';
+
 export {
   deleteTasks,
   deleteScheduledRecurringTasks,
@@ -27,4 +29,5 @@ export {
   acceptTask,
   pinTask,
   fetchTaskDashboard,
+  createBulkTaskSaga
 };

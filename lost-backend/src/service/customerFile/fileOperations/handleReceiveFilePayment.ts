@@ -1,8 +1,8 @@
-import { Types } from "mongoose";
-import { EmployeeSchema, UserSchema } from "../../../models";
-import CustomerFileSchema from "../../../models/customerFile";
-import { ERROR } from "../../../shared/enums";
-import CustomerFileStatusNotification from "../../../socket/sendNotification";
+import { Types } from 'mongoose';
+import { EmployeeSchema, UserSchema } from '../../../schema';
+import CustomerFileSchema from '../../../schema/customerFile';
+import { ERROR } from '../../../shared/enums';
+import CustomerFileStatusNotification from '../../../socket/sendNotification';
 
 const handleReceiveFilePayment = async ({ data, loginUser }: { data: any; loginUser: any }) => {
   const customerFile = await CustomerFileSchema.findOneAndUpdate(
@@ -26,7 +26,7 @@ const handleReceiveFilePayment = async ({ data, loginUser }: { data: any; loginU
   user.ledgerBalanceHistory.push({
     date: new Date(),
     ledgerBalance: data.amount,
-    type: "debit",
+    type: 'debit',
     remarks: `Rs. ${data.amount} received for file no ${data.loanApplicationNumber}`,
   });
   await user.save();
@@ -44,7 +44,7 @@ const handleReceiveFilePayment = async ({ data, loginUser }: { data: any; loginU
     customerFileId: customerFile._id,
     updater: loginUser,
     message: {
-      message: `Rs. ${data.amount} received by ${loginUserDetails.firstName + " " + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role})`,
+      message: `Rs. ${data.amount} received by ${loginUserDetails.firstName + ' ' + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role})`,
       title: `FI-${customerFile.loanApplicationNumber}  payment received`,
     },
     organization: loginUser.organization._id,

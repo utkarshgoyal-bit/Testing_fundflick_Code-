@@ -1,5 +1,5 @@
-import { Types } from "mongoose";
-import EmployeeSchema from "../../models/employee";
+import { Types } from 'mongoose';
+import EmployeeSchema from '../../schema/employee';
 
 const getEmployeeById = async ({ loginUser, id }: { loginUser: any; id: string }) => {
   const projections = {

@@ -1,8 +1,8 @@
-import { Types } from "mongoose";
-import UserSchema from "../../models/auth";
-import checkPermission from "../../lib/permissions/checkPermission";
-import { PERMISSIONS } from "../../shared/enums/permissions";
-import isSuperAdmin from "../../helper/booleanCheck/isSuperAdmin";
+import { Types } from 'mongoose';
+import isSuperAdmin from '../../helper/booleanCheck/isSuperAdmin';
+import checkPermission from '../../lib/permissions/checkPermission';
+import UserSchema from '../../schema/auth';
+import { PERMISSIONS } from '../../shared/enums/permissions';
 
 const getUserById = async ({ loginUser, id }: { loginUser: any; id: string }) => {
   const hasCreatePermission = await checkPermission(loginUser, PERMISSIONS.USER_CREATE);
@@ -27,7 +27,9 @@ const getUserById = async ({ loginUser, id }: { loginUser: any; id: string }) =>
       }),
   };
 
-  const users = await UserSchema.find(query, projections).populate(["employeeId", "roleRef"]).sort({ createdAt: -1 });
+  const users = await UserSchema.find(query, projections)
+    .populate(['employeeId', 'roleRef'])
+    .sort({ createdAt: -1 });
   return users.map((item: any) => ({
     _id: item._id,
     isActive: item.isActive,
@@ -39,7 +41,7 @@ const getUserById = async ({ loginUser, id }: { loginUser: any; id: string }) =>
     },
     branches: item.branches,
     employeeId: item.employeeId?._id,
-    name: item.employeeId?.firstName + " " + item.employeeId?.lastName,
+    name: item.employeeId?.firstName + ' ' + item.employeeId?.lastName,
     email: item.employeeId?.email,
     mobile: item.employeeId?.mobile,
     dob: item.employeeId?.dob,

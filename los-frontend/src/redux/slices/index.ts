@@ -41,6 +41,7 @@ import ServiceReducer from './services';
 import DepartmentReducer from './department';
 import fetchOrganizationConfigsReducer from './organizationConfigs/fetchOrganizationConfigs';
 import tasksDashboardSlice from './taskDashboard';
+import clientLedgerReducer from './clientLedger';
 const rootReducer = combineReducers({
   department: DepartmentReducer,
   client: ClientReducer,
@@ -84,6 +85,7 @@ const rootReducer = combineReducers({
   allLoansStatistics: fetchAllLoansStatisticsReducers,
   loanById: fetchLoanByIdReducers,
   organizationConfigs: fetchOrganizationConfigsReducer,
+  clientLedger: clientLedgerReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

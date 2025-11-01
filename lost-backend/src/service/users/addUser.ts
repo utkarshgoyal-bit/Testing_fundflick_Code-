@@ -1,9 +1,8 @@
-import { Types } from "mongoose";
-import { AddUserReqType } from "../../controller/users/validations";
-import { encrypt } from "../../helper/encrypt";
-import { User } from "../../interfaces/user.interface";
-import UserSchema from "../../models/auth";
-import { ERROR } from "../../shared/enums";
+import { Types } from 'mongoose';
+import { AddUserReqType } from '../../controller/users/validations';
+import { encrypt } from '../../helper/encrypt';
+import UserSchema from '../../schema/auth';
+import { ERROR } from '../../shared/enums';
 const addUser = async ({
   body,
   loginUser,
@@ -25,7 +24,7 @@ const addUser = async ({
   body.organizations = [loginUser.organization._id];
   const user = new UserSchema({
     ...body,
-    password: await encrypt("test@123"),
+    password: await encrypt('test@123'),
   });
   await user.save();
   return user;

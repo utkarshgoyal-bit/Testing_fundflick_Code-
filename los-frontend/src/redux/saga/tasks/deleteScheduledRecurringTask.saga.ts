@@ -1,7 +1,7 @@
 import apiCaller, { ApiResponse } from '@/helpers/apiHelper';
 import { TasksAction } from '@/lib/interfaces';
 import { ITaskTable } from '@/lib/interfaces/tables';
-import { DELETE_SCHEDULED_RECURRING_TASK, FETCH_SCHEDULED_RECURRING_TASKS } from '@/redux/actions/types';
+import { DELETE_SCHEDULED_RECURRING_TASK, FETCH_BULK_TASKS } from '@/redux/actions/types';
 import { setLoading } from '@/redux/slices/publicSlice';
 import { setError } from '@/redux/slices/tasks';
 import { call, put, takeEvery } from 'redux-saga/effects';
@@ -16,7 +16,7 @@ function* deleteScheduledRecurringTaskSaga(action: TasksAction) {
       error: 'An error occurred while deleting scheduled/recurring task',
     });
     if (response.data) {
-      yield put({ type: FETCH_SCHEDULED_RECURRING_TASKS });
+      yield put({ type: FETCH_BULK_TASKS });
     } else if (response.error) {
       yield put(setError(response.error));
     }

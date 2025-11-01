@@ -2,7 +2,8 @@
 import { Request, Response } from 'express';
 import path from 'path';
 import { searchQuery, searchQueryPayment } from '../../../src/interfaces';
-import { ApiResponseHandler, StatusCodes } from '../../helper/responseHelper';
+import { ApiResponseHandler } from '../../helper/responseHelper';
+import { GetCollectionCaseQuery } from '../../interfaces/collection.interface';
 import Logger from '../../lib/logger';
 import {
   addCaseContact,
@@ -27,8 +28,9 @@ import {
   updateCasePayment,
   uploadBulkCases,
 } from '../../service/collection';
+import flagCase from '../../service/collection/case/flagCase';
 import getCollectionsReports from '../../service/collection/getCollectionsDashboardReports';
-import { ERROR, SUCCESS } from '../../shared/enums';
+import { ERROR, StatusCodes, SUCCESS } from '../../shared/enums';
 const bulkUploadCases = async (req: Request, res: Response) => {
   try {
     const { file, body, employee, loginUser } = req;
@@ -60,8 +62,24 @@ const bulkUploadCases = async (req: Request, res: Response) => {
 const getCasesController = async (req: Request, res: Response) => {
   try {
     const { loginUser, query } = req;
-    const allData = await getCases({ loginUser, query });
+    const queryObj = query as unknown as GetCollectionCaseQuery;
+    const allData = await getCases({ loginUser, query: queryObj });
     ApiResponseHandler.sendResponse(res, StatusCodes.OK, allData, 'All Data' + SUCCESS.FETCHED);
+  } catch (error) {
+    return ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
+  }
+};
+const flagCaseController = async (req: Request, res: Response) => {
+  try {
+    const { loginUser, params, body } = req;
+    const { caseNo } = params;
+    await flagCase({
+      caseNo,
+      isFlagged: body.isFlagged,
+      flagRemark: body.flagRemark,
+      loginUser,
+    });
+    ApiResponseHandler.sendResponse(res, StatusCodes.OK, {}, 'Flagged' + SUCCESS.UPDATED);
   } catch (error) {
     return ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
   }
@@ -361,6 +379,7 @@ export {
   editCompanyNoticeController,
   editLegalNoticeController,
   exportCasesByDateController,
+  flagCaseController,
   getCaseNoDetailsController,
   getCaseNoFollowUpDetailsController,
   getCasesController,

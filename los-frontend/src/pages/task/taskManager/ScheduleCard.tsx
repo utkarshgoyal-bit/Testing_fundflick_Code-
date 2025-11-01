@@ -25,13 +25,12 @@ import {
   Calendar,
   CalendarClock,
   CheckCircle2,
+  Copy,
   Edit,
   FileText,
   IndianRupee,
   MessageSquare,
   MoreHorizontal,
-  Pin,
-  PinOff,
   RefreshCcw,
   RefreshCwOff,
   Scale,
@@ -43,7 +42,7 @@ import Comments from './comments';
 import getStatusColor from '@/helpers/getStatusColor';
 import getStatusDot from '@/helpers/getStatusDot';
 import getStatusLine from '@/helpers/getStatusLine';
-
+import getPriorityColor from '@/helpers/getPriorityColor';
 
 const priorityOfTask = {
   1: {
@@ -60,36 +59,31 @@ const priorityOfTask = {
   },
 };
 
-const getPriorityColor = (dueDate: string) => {
-  const daysDiff = moment(dueDate).diff(moment(), 'days');
-  if (daysDiff <= 1) return 'text-color-error';
-  if (daysDiff <= 3) return 'text-color-black';
-  return 'text-fg-secondary';
-};
-
 const taskName = (item: any) => {
-  return item?.type?.toLocaleLowerCase() === 'ca'
-    ? `Return: ${item?.returnName || item.serviceId?.serviceName}`
-    : item?.type?.toLocaleLowerCase() !== 'other'
-      ? camelToTitle(item?.type || '-')
-      : item?.title;
+  const t = item?.type?.toLowerCase();
+  if (!t) {
+    return item?.title;
+  }
+  if (t === 'ca') return `${item?.returnName || item.serviceId?.serviceName || item.title} `;
+  return t !== 'other' ? camelToTitle(item?.type || '-') : item?.title;
 };
 const ScheduleCard = ({
   item,
   userData,
   loggedInUserId,
   formatDate,
+  timezone,
   onMarkTaskAsCompletedHandler,
   onStopRepeatTaskHandler,
   onDeleteTaskHandler,
   onAcceptTaskHandler,
-  onPinTaskHandler,
   onEditTaskHandler,
 }: {
   item: ITaskTable;
   userData: any;
   loggedInUserId: string;
   formatDate: string;
+  timezone: string;
   onMarkTaskAsCompletedHandler: (item: any) => void;
   onStopRepeatTaskHandler: (item: any) => void;
   onDeleteTaskHandler: (item: any) => void;
@@ -102,7 +96,7 @@ const ScheduleCard = ({
   const daysDiff = dueDate.diff(moment(), 'days');
   const isCreatedUser = userData?.employment?._id === item?.createdBy?._id;
   const isLoggedInUser = item?.users?.find((user: any) => user.employeeId === loggedInUserId);
-  const isAccepted = item.acceptedBy && item.status == TASK_STATUS.IN_PROGRESS;
+  const isAccepted = isLoggedInUser && item.status == TASK_STATUS.IN_PROGRESS;
   let canAccept = false;
   if (isLoggedInUser) {
     canAccept = item.status == TASK_STATUS.PENDING || item.status == TASK_STATUS.UPCOMING;
@@ -128,9 +122,16 @@ const ScheduleCard = ({
               </div>
 
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-fg-primary text-sm leading-tight break-words mb-2">
-                  {taskName(item)}
-                </h3>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <h3 className="font-semibold text-fg-primary text-sm leading-tight break-words">
+                    {taskName(item) || item.title}
+                  </h3>
+                  {item.isBulkTask && (
+                    <div className="flex items-center justify-center">
+                      <Copy className="h-3.5 w-3.5 text-color-primary" />
+                    </div>
+                  )}
+                </div>
                 <span className={`px-2 py-1  rounded-full text-xs font-medium border ${getStatusColor(item.status)}`}>
                   {camelToTitle(item.status || STATUS.PENDING)}
                 </span>
@@ -153,18 +154,7 @@ const ScheduleCard = ({
               </div>
             </div>
 
-            {/* Mobile Actions - Right Aligned */}
             <div className="flex flex-col gap-1.5 flex-shrink-0">
-              {
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 w-8 p-0 hover:bg-color-success/10 hover:text-color-success hover:border-color-success/30"
-                  onClick={() => onMarkTaskAsCompletedHandler(item)}
-                >
-                  <Pin className="h-3.5 w-3.5" />
-                </Button>
-              }
               {isAccepted && (
                 <Button
                   variant="outline"
@@ -223,8 +213,8 @@ const ScheduleCard = ({
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete Task</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete your account and remove your data from
-                        our servers.
+                        This action cannot be undone. This will permanently delete your account and remove your data
+                        from our servers.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -242,14 +232,11 @@ const ScheduleCard = ({
             </div>
           </div>
 
-          {/* Description - Left Aligned */}
           <div className="ml-6">
             <p className="text-xs text-fg-secondary line-clamp-2 leading-relaxed">{item.description}</p>
           </div>
 
-          {/* Meta Info and Accept Button Row */}
           <div className="flex items-center justify-between gap-3 ml-6">
-            {/* Meta Info - Left Aligned */}
             <div className="flex flex-wrap gap-2 flex-1">
               <div className="flex items-center gap-1.5 bg-color-surface-muted/50 px-2 py-1 rounded-lg border border-fg-border/30">
                 <FileText className="h-3 w-3 text-fg-tertiary" />
@@ -305,9 +292,7 @@ const ScheduleCard = ({
             )}
           </div>
 
-          {/* People Row */}
           <div className="flex items-center justify-between ml-6">
-            {/* Creator - Left Aligned */}
             <div className="flex items-center gap-2 flex-1">
               <div className="h-5 w-5 rounded-full bg-color-primary/10 flex items-center justify-center">
                 <span className="text-color-primary font-medium text-xs">
@@ -383,13 +368,13 @@ const ScheduleCard = ({
               <div className={cn('w-px h-8 bg-fg-border', getStatusLine(item.status))} />
             </div>
 
-            {/* Task Content */}
             <div className="flex-1 space-y-2">
-              {/* Task Header */}
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-semibold text-fg-primary text-base leading-tight">{taskName(item)}</h3>
+
+                    {item.isBulkTask && <Copy className="h-4 w-4 text-color-primary" />}
 
                     <span
                       className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(item.status)}`}
@@ -401,7 +386,6 @@ const ScheduleCard = ({
                 </div>
               </div>
 
-              {/* Task Meta Info */}
               <div className="flex items-center gap-6 text-sm flex-wrap">
                 <div className="flex items-center gap-1.5">
                   <FileText className="h-3.5 w-3.5 text-fg-tertiary" />
@@ -450,21 +434,6 @@ const ScheduleCard = ({
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1.5">
-                  <Calendar className={`h-3.5 w-3.5 ${getPriorityColor(dueDate.format())}`} />
-                  <span className={`font-medium ${getPriorityColor(dueDate.format())}`}>
-                    {isOverdue
-                      ? 'Overdue'
-                      : daysDiff === 0
-                        ? 'Due Today'
-                        : daysDiff === 1
-                          ? 'Due Tomorrow'
-                          : daysDiff === 2
-                            ? 'Due in 2 days'
-                            : dueDate.format('MMM Do')}
-                  </span>
-                </div>
-
                 {item.caseNo && (
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs text-fg-tertiary">Case No:</span>
@@ -480,7 +449,6 @@ const ScheduleCard = ({
                 )}
               </div>
 
-              {/* Creator & Assignees */}
               <div className="flex items-center gap-6 flex-wrap">
                 <div className="flex items-center gap-2">
                   <div className="h-6 w-6 rounded-full bg-color-primary/10 flex items-center justify-center">
@@ -587,13 +555,7 @@ const ScheduleCard = ({
             </div>
           </div>
 
-          {/* Right Side - Actions */}
           <div className="flex items-center gap-2 ml-4 flex-wrap">
-            {
-              <Button variant="ghost" onClick={() => onPinTaskHandler(item)}>
-                {item.isPinned ? <Pin className="h-4 w-4 text-success" /> : <PinOff className="h-4 w-4 " />}
-              </Button>
-            }
             {isUnderReview && (
               <Button
                 variant="outline"
@@ -687,13 +649,10 @@ const ScheduleCard = ({
                 </AlertDialogContent>
               </AlertDialog>
             )}
-
-            {/* <ChevronRight className="h-4 w-4 text-fg-tertiary group-hover:text-color-primary transition-colors" /> */}
           </div>
         </div>
       </div>
 
-      {/* Comments & Timeline Tabs */}
       <div className="border-t border-fg-border bg-color-surface-muted/50 px-3 sm:px-4 py-2 sm:py-3">
         <Tabs defaultValue="comments" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
@@ -725,7 +684,7 @@ const ScheduleCard = ({
             <Timeline
               timelineData={item.timeline?.map((timeline) => ({
                 content: timeline.comment,
-                date: toFormatDate({ date: timeline.createdAt, toFormat: formatDate }),
+                date: toFormatDate({ date: timeline.createdAt, toFormat: formatDate, timeZone: timezone }),
                 title: '',
                 name: timeline.createdByName && `By : ${timeline.createdByName || ''}`,
               }))}

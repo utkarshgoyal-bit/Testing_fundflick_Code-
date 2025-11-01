@@ -1,5 +1,5 @@
-import { Types } from "mongoose";
-import BranchSchema from "../../models/branches";
+import { Types } from 'mongoose';
+import BranchSchema from '../../schema/branches';
 
 const unblockBranch = async ({ id, loginUser }: { id: string; loginUser: any }) => {
   const isUpdated = await BranchSchema.findOneAndUpdate(
@@ -11,7 +11,7 @@ const unblockBranch = async ({ id, loginUser }: { id: string; loginUser: any }) 
     }
   );
   if (!isUpdated) {
-    throw "Branch not found";
+    throw 'Branch not found';
   }
   return isUpdated;
 };

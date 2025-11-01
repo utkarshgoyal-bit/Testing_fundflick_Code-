@@ -1,6 +1,6 @@
-import { Types } from "mongoose";
-import customerFileSchema from "../../../../models/customerFile";
-import { ERROR } from "../../../../shared/enums";
+import { Types } from 'mongoose';
+import customerFileSchema from '../../../../schema/customerFile';
+import { ERROR } from '../../../../shared/enums';
 
 const deleteCustomerAssociates = async ({
   id,

@@ -2,8 +2,8 @@ import { Types } from 'mongoose';
 import { io, onlineUsers } from '..';
 import { firebaseMessaging } from '../firebase/firebaseAdmin';
 import { default as Logger } from '../lib/logger';
-import { UserSchema } from '../models';
-import NotificationModel from '../models/notification';
+import { UserSchema } from '../schema';
+import NotificationModel from '../schema/notification';
 import { ROLES } from '../shared/enums';
 
 interface Notification {

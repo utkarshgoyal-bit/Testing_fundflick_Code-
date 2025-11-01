@@ -1,4 +1,4 @@
-import CollectionModel from "../../models/collection/dataModel";
+import CollectionModel from '../../schema/collection/dataModel';
 const updateBranchService = async (caseNo: string, newBranch: string, loginUser: any) => {
   return await CollectionModel.findOneAndUpdate(
     { caseNo, organization: loginUser.organization._id },

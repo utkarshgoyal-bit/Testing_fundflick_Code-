@@ -3,4 +3,9 @@ import editCustomerAssociate from './editCustomerAssociate';
 import getCustomerAssociates from './getCustomerAssociates';
 import deleteCustomerAssociates from './deleteCustomerAssociates';
 
-export default { addCustomerAssociate, editCustomerAssociate, getCustomerAssociates, deleteCustomerAssociates };
+export default {
+  addCustomerAssociate,
+  editCustomerAssociate,
+  getCustomerAssociates,
+  deleteCustomerAssociates,
+};

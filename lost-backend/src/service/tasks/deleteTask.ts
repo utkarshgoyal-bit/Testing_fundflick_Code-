@@ -1,20 +1,31 @@
-import { Types } from "mongoose";
-import TasksSchema from "../../models/tasks";
-import { ERROR } from "../../shared/enums";
-import { TasksUpdateNotification } from "../../socket/sendNotification";
+import { Types } from 'mongoose';
+import { LoginUser } from '../../interfaces';
+import TasksSchema from '../../schema/tasks';
+import { ERROR } from '../../shared/enums';
+import { TasksUpdateNotification } from '../../socket/sendNotification';
 
-export default async function deleteTask({ loginUser, body }: { loginUser: any; body: any }) {
+export default async function deleteTask({
+  loginUser,
+  body,
+}: {
+  loginUser: LoginUser;
+  body: { _id: string | Types.ObjectId };
+}) {
   const { _id } = body;
+  const {
+    organization: { _id: organizationId },
+    employeeId,
+  } = loginUser;
   const deletedTask = await TasksSchema.findOneAndUpdate(
     {
       _id: new Types.ObjectId(_id),
-      createdBy: new Types.ObjectId(loginUser.employeeId),
-      organization: loginUser.organization._id,
+      createdBy: new Types.ObjectId(employeeId),
+      organizationId: organizationId,
     },
     {
-      isDeleted: true,
+      MONGO_DELETED: true,
       updatedAt: new Date(),
-      updatedBy: new Types.ObjectId(loginUser.employeeId),
+      updatedBy: new Types.ObjectId(employeeId),
     },
     {
       new: true,
@@ -27,7 +38,7 @@ export default async function deleteTask({ loginUser, body }: { loginUser: any; 
   await TasksUpdateNotification({
     users: [
       ...deletedTask.users.map((user: any) =>
-        user instanceof Types.ObjectId || typeof user === "string" ? user : user.userDetails
+        user instanceof Types.ObjectId || typeof user === 'string' ? user : user.employeeId
       ),
       deletedTask.createdBy,
     ],
@@ -40,7 +51,7 @@ export default async function deleteTask({ loginUser, body }: { loginUser: any; 
         deletedTask.description ? `Note: ${deletedTask.description}` : null,
       ]
         .filter(Boolean)
-        .join(", "),
+        .join(', '),
     },
     organization: loginUser.organization._id,
   });

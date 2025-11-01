@@ -1,18 +1,58 @@
-import CollectionModel from "../../models/collection/dataModel";
+import { Types } from 'mongoose';
+import isSuperAdmin from '../../helper/booleanCheck/isSuperAdmin';
+import { LoginUser } from '../../interfaces';
+import checkPermission from '../../lib/permissions/checkPermission';
+import CollectionModel from '../../schema/collection/dataModel';
+import { PERMISSIONS } from '../../shared/enums/permissions';
 
-const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
+const getCollectionsReports = async ({ loginUser }: { loginUser: LoginUser }) => {
+  const _isSuperAdmin = isSuperAdmin([loginUser?.role || '']);
+
+  const [_isCollectionViewAssigned, _isCollectionViewArea, _isCollectionViewOther] =
+    await Promise.all([
+      checkPermission(loginUser, PERMISSIONS.COLLECTION_VIEW_ASSIGNED),
+      checkPermission(loginUser, PERMISSIONS.COLLECTION_VIEW_AREA),
+      checkPermission(loginUser, PERMISSIONS.COLLECTION_VIEW_OTHER),
+    ]);
+
+  const orConditionsForAccess = [];
+  const assignedQuery =
+    _isCollectionViewAssigned && !_isSuperAdmin
+      ? { assignedTo: new Types.ObjectId(loginUser.employeeId) }
+      : {};
+  if (_isCollectionViewAssigned) {
+    orConditionsForAccess.push(assignedQuery);
+  }
+
+  if (_isCollectionViewArea && !_isSuperAdmin) {
+    const userBranches =
+      Array.isArray(loginUser?.branches) && loginUser.branches.length > 0 ? loginUser.branches : [];
+    if (userBranches.length > 0) {
+      orConditionsForAccess.push({ area: { $in: userBranches } });
+    } else {
+      orConditionsForAccess.push({ area: { $in: ['__NO_BRANCH__'] } });
+    }
+  }
+  const permissionsQuery =
+    _isCollectionViewOther || _isSuperAdmin
+      ? {}
+      : orConditionsForAccess.length > 0
+        ? { $or: orConditionsForAccess }
+        : { _id: null };
+
   const followupsReportsPipeline = [
     {
       $match: {
         organization: loginUser.organization._id,
+        ...permissionsQuery,
         followUps: { $size: 0 },
         $expr: {
           $or: [
             {
-              $and: [{ $ne: ["$dueEmi", null] }, { $ne: ["$dueEmi", 0] }],
+              $and: [{ $ne: ['$dueEmi', null] }, { $ne: ['$dueEmi', 0] }],
             },
             {
-              $and: [{ $ne: ["$dueEmiAmount", null] }, { $ne: ["$dueEmiAmount", 0] }],
+              $and: [{ $ne: ['$dueEmiAmount', null] }, { $ne: ['$dueEmiAmount', 0] }],
             },
           ],
         },
@@ -20,17 +60,17 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
     },
     {
       $group: {
-        _id: "$area",
+        _id: '$area',
         totalCases: { $sum: 1 },
         cases: {
           $push: {
-            caseNo: "$caseNo",
-            customer: "$customer",
-            overdue: "$overdue",
-            address: "$address",
-            dueEmi: "$dueEmi",
-            dueEmiAmount: "$dueEmiAmount",
-            followups: "$followUps",
+            caseNo: '$caseNo',
+            customer: '$customer',
+            overdue: '$overdue',
+            address: '$address',
+            dueEmi: '$dueEmi',
+            dueEmiAmount: '$dueEmiAmount',
+            followups: '$followUps',
           },
         },
       },
@@ -38,7 +78,7 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
     {
       $project: {
         _id: 0,
-        area: "$_id",
+        area: '$_id',
         totalCases: 1,
         cases: 1,
       },
@@ -49,36 +89,37 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
     {
       $match: {
         organization: loginUser.organization._id,
+        ...permissionsQuery,
       },
     },
     {
       $lookup: {
-        from: "collection_case_payments",
-        localField: "paymentDetails",
-        foreignField: "_id",
-        as: "paymentDetails",
+        from: 'collection_case_payments',
+        localField: 'paymentDetails',
+        foreignField: '_id',
+        as: 'paymentDetails',
       },
     },
     {
       $addFields: {
         totalPaid: {
-          $sum: "$paymentDetails.amount",
+          $sum: '$paymentDetails.amount',
         },
       },
     },
     {
       $group: {
-        _id: "$area",
+        _id: '$area',
         pendingCases: {
           $sum: {
             $cond: [
               {
                 $or: [
                   {
-                    $and: [{ $ne: ["$dueEmi", null] }, { $ne: ["$dueEmi", 0] }],
+                    $and: [{ $ne: ['$dueEmi', null] }, { $ne: ['$dueEmi', 0] }],
                   },
                   {
-                    $and: [{ $ne: ["$dueEmiAmount", null] }, { $ne: ["$dueEmiAmount", 0] }],
+                    $and: [{ $ne: ['$dueEmiAmount', null] }, { $ne: ['$dueEmiAmount', 0] }],
                   },
                 ],
               },
@@ -93,10 +134,10 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
               {
                 $and: [
                   {
-                    $or: [{ $eq: ["$dueEmi", null] }, { $eq: ["$dueEmi", 0] }],
+                    $or: [{ $eq: ['$dueEmi', null] }, { $eq: ['$dueEmi', 0] }],
                   },
                   {
-                    $or: [{ $eq: ["$dueEmiAmount", null] }, { $eq: ["$dueEmiAmount", 0] }],
+                    $or: [{ $eq: ['$dueEmiAmount', null] }, { $eq: ['$dueEmiAmount', 0] }],
                   },
                 ],
               },
@@ -105,21 +146,24 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
             ],
           },
         },
-        totalPaid: { $sum: "$totalPaid" },
-        totalDue: { $sum: "$dueEmiAmount" },
+        totalPaid: { $sum: '$totalPaid' },
+        totalDue: { $sum: '$dueEmiAmount' },
       },
     },
     {
       $addFields: {
-        totalCases: { $add: ["$pendingCases", "$resolvedCases"] },
+        totalCases: { $add: ['$pendingCases', '$resolvedCases'] },
         resolvedPercentage: {
           $cond: [
-            { $eq: [{ $add: ["$pendingCases", "$resolvedCases"] }, 0] },
+            { $eq: [{ $add: ['$pendingCases', '$resolvedCases'] }, 0] },
             0,
             {
               $round: [
                 {
-                  $multiply: [{ $divide: ["$resolvedCases", { $add: ["$pendingCases", "$resolvedCases"] }] }, 100],
+                  $multiply: [
+                    { $divide: ['$resolvedCases', { $add: ['$pendingCases', '$resolvedCases'] }] },
+                    100,
+                  ],
                 },
                 2,
               ],
@@ -128,12 +172,15 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
         },
         collectionPercentage: {
           $cond: [
-            { $eq: [{ $add: ["$totalPaid", "$totalDue"] }, 0] },
+            { $eq: [{ $add: ['$totalPaid', '$totalDue'] }, 0] },
             0,
             {
               $round: [
                 {
-                  $multiply: [{ $divide: ["$totalPaid", { $add: ["$totalPaid", "$totalDue"] }] }, 100],
+                  $multiply: [
+                    { $divide: ['$totalPaid', { $add: ['$totalPaid', '$totalDue'] }] },
+                    100,
+                  ],
                 },
                 2,
               ],
@@ -145,7 +192,7 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
     {
       $project: {
         _id: 0,
-        area: "$_id",
+        area: '$_id',
         pendingCases: 1,
         resolvedCases: 1,
         totalCases: 1,
@@ -159,22 +206,23 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
     {
       $match: {
         organization: loginUser.organization._id,
+        ...permissionsQuery,
       },
     },
     {
       $lookup: {
-        from: "collection_follow_ups",
-        localField: "followUps",
-        foreignField: "_id",
-        as: "followUps",
+        from: 'collection_follow_ups',
+        localField: 'followUps',
+        foreignField: '_id',
+        as: 'followUps',
       },
     },
     {
       $lookup: {
-        from: "collection_case_payments",
-        localField: "paymentDetails",
-        foreignField: "_id",
-        as: "paymentDetails",
+        from: 'collection_case_payments',
+        localField: 'paymentDetails',
+        foreignField: '_id',
+        as: 'paymentDetails',
       },
     },
     {
@@ -183,7 +231,7 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
           {
             $group: {
               _id: null,
-              totalAmountDue: { $sum: "$overdue" },
+              totalAmountDue: { $sum: '$overdue' },
             },
           },
         ],
@@ -191,7 +239,10 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
           {
             $match: {
               organization: loginUser.organization._id,
-              $and: [{ "followUps.commit": { $gt: new Date().toISOString() } }, { "followUps.dueAmount": { $gt: 0 } }],
+              $and: [
+                { 'followUps.commit': { $gt: new Date().toISOString() } },
+                { 'followUps.dueAmount': { $gt: 0 } },
+              ],
             },
           },
           {
@@ -204,33 +255,33 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
         loanTypeSummary: [
           {
             $group: {
-              _id: "$loanType",
+              _id: '$loanType',
               count: { $sum: 1 },
             },
           },
           {
             $project: {
-              loanType: "$_id",
+              loanType: '$_id',
               count: 1,
               _id: 0,
             },
           },
         ],
         totalCollections: [
-          { $unwind: { path: "$paymentDetails", preserveNullAndEmptyArrays: true } },
+          { $unwind: { path: '$paymentDetails', preserveNullAndEmptyArrays: true } },
           {
             $group: {
               _id: null,
-              totalCollections: { $sum: "$paymentDetails.amount" },
+              totalCollections: { $sum: '$paymentDetails.amount' },
             },
           },
         ],
         statusStats: [
           {
             $group: {
-              _id: "$_id", // group by document _id to deduplicate post-lookup
-              dueEmi: { $first: "$dueEmi" },
-              dueEmiAmount: { $first: "$dueEmiAmount" },
+              _id: '$_id', // group by document _id to deduplicate post-lookup
+              dueEmi: { $first: '$dueEmi' },
+              dueEmiAmount: { $first: '$dueEmiAmount' },
             },
           },
           {
@@ -241,8 +292,8 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
                   $cond: [
                     {
                       $or: [
-                        { $and: [{ $ne: ["$dueEmi", null] }, { $ne: ["$dueEmi", 0] }] },
-                        { $and: [{ $ne: ["$dueEmiAmount", null] }, { $ne: ["$dueEmiAmount", 0] }] },
+                        { $and: [{ $ne: ['$dueEmi', null] }, { $ne: ['$dueEmi', 0] }] },
+                        { $and: [{ $ne: ['$dueEmiAmount', null] }, { $ne: ['$dueEmiAmount', 0] }] },
                       ],
                     },
                     1,
@@ -255,10 +306,10 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
                   $cond: [
                     {
                       $or: [
-                        { $eq: ["$dueEmi", null] },
-                        { $eq: ["$dueEmi", 0] },
-                        { $eq: ["$dueEmiAmount", null] },
-                        { $eq: ["$dueEmiAmount", 0] },
+                        { $eq: ['$dueEmi', null] },
+                        { $eq: ['$dueEmi', 0] },
+                        { $eq: ['$dueEmiAmount', null] },
+                        { $eq: ['$dueEmiAmount', 0] },
                       ],
                     },
                     1,
@@ -273,32 +324,33 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
     },
     {
       $project: {
-        totalAmountDue: { $ifNull: [{ $arrayElemAt: ["$totalDue.totalAmountDue", 0] }, 0] },
-        totalCollections: { $ifNull: [{ $arrayElemAt: ["$totalCollections.totalCollections", 0] }, 0] },
-        pendingCases: { $ifNull: [{ $arrayElemAt: ["$statusStats.pendingCases", 0] }, 0] },
-        resolvedCases: { $ifNull: [{ $arrayElemAt: ["$statusStats.resolvedCases", 0] }, 0] },
+        totalAmountDue: { $ifNull: [{ $arrayElemAt: ['$totalDue.totalAmountDue', 0] }, 0] },
+        totalCollections: {
+          $ifNull: [{ $arrayElemAt: ['$totalCollections.totalCollections', 0] }, 0],
+        },
+        pendingCases: { $ifNull: [{ $arrayElemAt: ['$statusStats.pendingCases', 0] }, 0] },
+        resolvedCases: { $ifNull: [{ $arrayElemAt: ['$statusStats.resolvedCases', 0] }, 0] },
         loanTypeSummary: 1,
       },
     },
   ];
 
   const stageWiseReportPipeline = [
-    { $match: { organization: loginUser.organization._id } },
-    // 1. Lookup follow-ups and payments
+    { $match: { organization: loginUser.organization._id, ...permissionsQuery } },
     {
       $lookup: {
-        from: "collection_case_followups",
-        localField: "followUps",
-        foreignField: "_id",
-        as: "followUps",
+        from: 'collection_case_followups',
+        localField: 'followUps',
+        foreignField: '_id',
+        as: 'followUps',
       },
     },
     {
       $lookup: {
-        from: "collection_case_payments",
-        localField: "paymentDetails",
-        foreignField: "_id",
-        as: "paymentDetails",
+        from: 'collection_case_payments',
+        localField: 'paymentDetails',
+        foreignField: '_id',
+        as: 'paymentDetails',
       },
     },
 
@@ -307,16 +359,16 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
       $addFields: {
         futureFollowUps: {
           $filter: {
-            input: "$followUps",
-            as: "f",
-            cond: { $gte: ["$$f.commit", "$$NOW"] },
+            input: '$followUps',
+            as: 'f',
+            cond: { $gte: ['$$f.commit', '$$NOW'] },
           },
         },
         pastFollowUps: {
           $filter: {
-            input: "$followUps",
-            as: "f",
-            cond: { $lt: ["$$f.commit", "$$NOW"] },
+            input: '$followUps',
+            as: 'f',
+            cond: { $lt: ['$$f.commit', '$$NOW'] },
           },
         },
       },
@@ -330,14 +382,14 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
             vars: {
               commits: {
                 $map: {
-                  input: "$pastFollowUps",
-                  as: "f",
-                  in: "$$f.commit",
+                  input: '$pastFollowUps',
+                  as: 'f',
+                  in: '$$f.commit',
                 },
               },
             },
             in: {
-              $cond: [{ $gt: [{ $size: "$$commits" }, 0] }, { $max: "$$commits" }, null],
+              $cond: [{ $gt: [{ $size: '$$commits' }, 0] }, { $max: '$$commits' }, null],
             },
           },
         },
@@ -349,10 +401,14 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
       $addFields: {
         paymentsAfterLastPTP: {
           $filter: {
-            input: "$paymentDetails",
-            as: "p",
+            input: '$paymentDetails',
+            as: 'p',
             cond: {
-              $cond: [{ $eq: ["$lastPTPDate", null] }, false, { $gt: ["$$p.date", "$lastPTPDate"] }],
+              $cond: [
+                { $eq: ['$lastPTPDate', null] },
+                false,
+                { $gt: ['$$p.date', '$lastPTPDate'] },
+              ],
             },
           },
         },
@@ -364,17 +420,17 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
       $addFields: {
         isBrokenPTP: {
           $and: [
-            { $eq: [{ $size: "$futureFollowUps" }, 0] },
-            { $gt: ["$dueEmiAmount", 0] },
-            { $eq: [{ $size: "$paymentsAfterLastPTP" }, 0] },
+            { $eq: [{ $size: '$futureFollowUps' }, 0] },
+            { $gt: ['$dueEmiAmount', 0] },
+            { $eq: [{ $size: '$paymentsAfterLastPTP' }, 0] },
           ],
         },
-        isFuturePTP: { $gt: [{ $size: "$futureFollowUps" }, 0] },
-        hasPayment: { $gt: [{ $size: "$paymentDetails" }, 0] },
+        isFuturePTP: { $gt: [{ $size: '$futureFollowUps' }, 0] },
+        hasPayment: { $gt: [{ $size: '$paymentDetails' }, 0] },
         futureFollowUpsCount: {
           $cond: {
-            if: { $isArray: "$futureFollowUps" },
-            then: { $size: "$futureFollowUps" },
+            if: { $isArray: '$futureFollowUps' },
+            then: { $size: '$futureFollowUps' },
             else: 0,
           },
         },
@@ -390,36 +446,36 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
               // ✅ Completed
               {
                 case: {
-                  $or: [{ $eq: ["$dueEmi", 0] }, { $eq: ["$dueEmiAmount", 0] }],
+                  $or: [{ $eq: ['$dueEmi', 0] }, { $eq: ['$dueEmiAmount', 0] }],
                 },
-                then: "completed",
+                then: 'completed',
               },
               // ✅ Pending
               {
                 case: {
                   $and: [
-                    { $gt: ["$dueEmi", 0] },
-                    { $gt: ["$dueEmiAmount", 0] },
-                    { $gt: [{ $size: "$futureFollowUps" }, 0] },
+                    { $gt: ['$dueEmi', 0] },
+                    { $gt: ['$dueEmiAmount', 0] },
+                    { $gt: [{ $size: '$futureFollowUps' }, 0] },
                   ],
                 },
-                then: "pending",
+                then: 'pending',
               },
               // ✅ Partially Paid
               {
                 case: {
                   $and: [
-                    { $gt: ["$dueEmi", 0] },
-                    { $gt: ["$dueEmiAmount", 0] },
-                    { $gt: [{ $size: "$paymentDetails" }, 0] },
+                    { $gt: ['$dueEmi', 0] },
+                    { $gt: ['$dueEmiAmount', 0] },
+                    { $gt: [{ $size: '$paymentDetails' }, 0] },
                     {
                       $gt: [
                         {
                           $size: {
                             $filter: {
-                              input: "$futureFollowUps",
-                              as: "f",
-                              cond: { $gt: ["$$f.commit", { $max: "$paymentDetails.date" }] },
+                              input: '$futureFollowUps',
+                              as: 'f',
+                              cond: { $gt: ['$$f.commit', { $max: '$paymentDetails.date' }] },
                             },
                           },
                         },
@@ -428,22 +484,22 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
                     },
                   ],
                 },
-                then: "partiallyPaid",
+                then: 'partiallyPaid',
               },
               // ✅ Expired
               {
                 case: {
                   $and: [
-                    { $eq: [{ $size: "$futureFollowUps" }, 0] },
-                    { $eq: [{ $size: "$paymentsAfterLastPTP" }, 0] },
-                    { $gt: ["$dueEmi", 0] },
-                    { $gt: ["$dueEmiAmount", 0] },
+                    { $eq: [{ $size: '$futureFollowUps' }, 0] },
+                    { $eq: [{ $size: '$paymentsAfterLastPTP' }, 0] },
+                    { $gt: ['$dueEmi', 0] },
+                    { $gt: ['$dueEmiAmount', 0] },
                   ],
                 },
-                then: "expired",
+                then: 'expired',
               },
             ],
-            default: "unknown",
+            default: 'unknown',
           },
         },
       },
@@ -452,19 +508,19 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
     // 8. Group for final summary
     {
       $group: {
-        _id: "$stage",
+        _id: '$stage',
         count: { $sum: 1 },
-        totalDueAmount: { $sum: "$dueEmiAmount" },
+        totalDueAmount: { $sum: '$dueEmiAmount' },
         brokenPTPCount: {
-          $sum: { $cond: ["$isBrokenPTP", 1, 0] },
+          $sum: { $cond: ['$isBrokenPTP', 1, 0] },
         },
         brokenPTPAmount: {
-          $sum: { $cond: ["$isBrokenPTP", "$dueEmiAmount", 0] },
+          $sum: { $cond: ['$isBrokenPTP', '$dueEmiAmount', 0] },
         },
         ptpAmount: {
-          $sum: { $cond: ["$isFuturePTP", "$dueEmiAmount", 0] },
+          $sum: { $cond: ['$isFuturePTP', '$dueEmiAmount', 0] },
         },
-        totalFutureFollowUps: { $sum: "$futureFollowUpsCount" },
+        totalFutureFollowUps: { $sum: '$futureFollowUpsCount' },
       },
     },
 
@@ -474,15 +530,15 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
         _id: null,
         stages: {
           $push: {
-            stage: "$_id",
-            count: "$count",
-            totalDueAmount: "$totalDueAmount",
+            stage: '$_id',
+            count: '$count',
+            totalDueAmount: '$totalDueAmount',
           },
         },
-        brokenPTPCount: { $sum: "$brokenPTPCount" },
-        brokenPTPAmount: { $sum: "$brokenPTPAmount" },
-        ptpAmount: { $sum: "$ptpAmount" },
-        totalFutureFollowUps: { $sum: "$totalFutureFollowUps" },
+        brokenPTPCount: { $sum: '$brokenPTPCount' },
+        brokenPTPAmount: { $sum: '$brokenPTPAmount' },
+        ptpAmount: { $sum: '$ptpAmount' },
+        totalFutureFollowUps: { $sum: '$totalFutureFollowUps' },
       },
     },
     {
@@ -496,12 +552,13 @@ const getCollectionsReports = async ({ loginUser }: { loginUser: any }) => {
       },
     },
   ];
-  const [collectionReportsData, followUpsReportsData, statesData, stageWiseReportData] = await Promise.all([
-    CollectionModel.aggregate(collectionReportsPipeline),
-    CollectionModel.aggregate(followupsReportsPipeline),
-    CollectionModel.aggregate(collectionStatesPipeline),
-    CollectionModel.aggregate(stageWiseReportPipeline),
-  ]);
+  const [collectionReportsData, followUpsReportsData, statesData, stageWiseReportData] =
+    await Promise.all([
+      CollectionModel.aggregate(collectionReportsPipeline),
+      CollectionModel.aggregate(followupsReportsPipeline),
+      CollectionModel.aggregate(collectionStatesPipeline),
+      CollectionModel.aggregate(stageWiseReportPipeline),
+    ]);
 
   return {
     collectionReportsData,

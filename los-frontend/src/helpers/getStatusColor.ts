@@ -10,7 +10,7 @@ const getStatusColor = (status: string) => {
       return ' text-color-accent border-color-accent';
     case TASK_STATUS.UPCOMING:
       return 'text-color-upcoming  border-color-upcoming';
-    case TASK_STATUS.RECURRING:
+    case TASK_STATUS.SCHEDULED:
       return 'text-color-recurring  border-color-recurring';
     default:
       return 'bg-color-surface-muted text-fg-secondary border-fg-border';

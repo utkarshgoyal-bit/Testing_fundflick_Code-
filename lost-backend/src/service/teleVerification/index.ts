@@ -4,4 +4,10 @@ import editTelephoneQuestion from './editTelephoneQuestions';
 import getTelephoneQuestionById from './getTelephoneQuestionById';
 import getTelephoneQuestions from './getTelephoneQuestions';
 
-export default { getTelephoneQuestions, addTelephoneQuestion, editTelephoneQuestion, getTelephoneQuestionById, deleteTelephoneQuestion };
+export default {
+  getTelephoneQuestions,
+  addTelephoneQuestion,
+  editTelephoneQuestion,
+  getTelephoneQuestionById,
+  deleteTelephoneQuestion,
+};

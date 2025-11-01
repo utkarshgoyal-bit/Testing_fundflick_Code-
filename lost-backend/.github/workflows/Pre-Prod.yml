@@ -1,4 +1,4 @@
-name: Deploy prod-backend
+name: Deploy pre-prod-backend
 
 on:
   push:
@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Setup Prisma
+        run: npx prisma generate
+
       - name: Build project
         run: pnpm run build
 
@@ -31,12 +34,11 @@ jobs:
         run: |
           cat <<EOT > .env
           PORT=${{ secrets.PRE_PROD_PORT }}
-          DATABASE_URL=${{ secrets.MAITRII_DB }}
           MAITRII_PASSWORD=${{ secrets.MAITRII_PASSWORD }}
           DB_ENV=preprod
           JWT_SECRET_SALT=${{ secrets.JWT_SECRET_SALT }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
-          DATABASE_URL=${{ secrets.MAITRII_URL }}
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
           DB_CONFIG=${{ secrets.DB_CONFIG }}
           OUTLOOK_USER=${{ secrets.OUTLOOK_USER }}
           OUTLOOK_PASS=${{ secrets.OUTLOOK_PASS }}
@@ -51,6 +53,7 @@ jobs:
           SMS_API_KEY=${{ secrets.SMS_API_KEY }}
           SMS_API_ROUTE=${{ secrets.SMS_API_ROUTE }}
           FIREBASE_SERVICE_ACCOUNT=${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          POSTGRES_URL=${{ secrets.POSTGRES_URL }}
           EOT
 
       - name: Clean up before deploy
@@ -74,6 +77,7 @@ jobs:
 
           cd /root/pre-prod/backend
           pnpm install
+          npx prisma generate
 
           if pm2 list | grep -q "pre-prod-backend"; then
             pm2 stop pre-prod-backend

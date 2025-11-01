@@ -1,8 +1,16 @@
-import { Types } from "mongoose";
-import CollectionModel from "../../../../models/collection/dataModel";
-const addCaseRemarks = async ({ caseNo, remark, loginUser }: { caseNo: string; remark: string; loginUser: any }) => {
+import { Types } from 'mongoose';
+import CollectionModel from '../../../../schema/collection/dataModel';
+const addCaseRemarks = async ({
+  caseNo,
+  remark,
+  loginUser,
+}: {
+  caseNo: string;
+  remark: string;
+  loginUser: any;
+}) => {
   if (!caseNo) {
-    throw new Error("Case number is required");
+    throw new Error('Case number is required');
   }
   const payload = {
     remark: remark,
@@ -14,7 +22,7 @@ const addCaseRemarks = async ({ caseNo, remark, loginUser }: { caseNo: string; r
     { new: true, upsert: false }
   );
   if (!data) {
-    throw new Error("Case not found");
+    throw new Error('Case not found');
   }
   return true;
 };

@@ -1,12 +1,13 @@
 import moment from 'moment';
 import { Types } from 'mongoose';
-import { searchQuery } from '../../../../src/interfaces/';
-import { COMMIT_STATUS_ORDER } from '../../../shared/enums';
+import { LoginUser, searchQuery } from '../../../../src/interfaces/';
 import { isTrue } from '../../../helper';
-import FollowUpData from '../../../models/collection/followUpData';
-import checkPermission from '../../../lib/permissions/checkPermission';
-import { PERMISSIONS } from '../../../shared/enums/permissions';
 import isSuperAdmin from '../../../helper/booleanCheck/isSuperAdmin';
+import logger from '../../../lib/logger';
+import checkPermission from '../../../lib/permissions/checkPermission';
+import FollowUpData from '../../../schema/collection/followUpData';
+import { COMMIT_STATUS_ORDER } from '../../../shared/enums';
+import { PERMISSIONS } from '../../../shared/enums/permissions';
 
 const getDailyFollowUpReport = async ({
   searchQuery,
@@ -14,11 +15,23 @@ const getDailyFollowUpReport = async ({
   limit,
 }: {
   searchQuery: searchQuery;
-  loginUser: any;
+  loginUser: LoginUser;
   limit?: number;
 }) => {
   try {
-    const matchStage: any = {
+    const _isSuperAdmin = isSuperAdmin([loginUser?.role || '']);
+    const [_isBranchView, _isAssignedView, _isDailyFollowupViewAccess, _isDailyFollowupViewOther] =
+      await Promise.all([
+        checkPermission(loginUser, PERMISSIONS.COLLECTION_VIEW_DAILY_FOLLOWUPS_BRANCH),
+        checkPermission(loginUser, PERMISSIONS.COLLECTION_VIEW_DAILY_FOLLOWUPS_ASSIGNED),
+        checkPermission(loginUser, PERMISSIONS.COLLECTION_VIEW_DAILY_FOLLOWUPS),
+        checkPermission(loginUser, PERMISSIONS.COLLECTION_VIEW_DAILY_FOLLOWUPS_OTHERS),
+      ]);
+
+    if (!_isSuperAdmin && !_isDailyFollowupViewAccess) {
+      return [];
+    }
+    const matchStage: { [key: string]: unknown } = {
       organization: loginUser.organization._id,
     };
     if (searchQuery.createdBy) {
@@ -56,22 +69,21 @@ const getDailyFollowUpReport = async ({
     if (searchQuery.visitType) {
       matchStage.visitType = searchQuery.visitType;
     }
-    let caseConditionsQuery: any = {};
+    let caseConditionsQuery: { [key: string]: unknown } = {};
     if (searchQuery.caseId) {
       caseConditionsQuery = {
         ...caseConditionsQuery,
         'refCaseId.caseNo': { $regex: new RegExp(searchQuery.caseId, 'i') },
       };
     }
-    const _isSuperAdmin = isSuperAdmin([loginUser?.role || '']);
-    const [_isBranchView, _isAssignedView] = await Promise.all([
-      checkPermission(loginUser, PERMISSIONS.COLLECTION_VIEW_DAILY_FOLLOWUPS_BRANCH_WISE),
-      checkPermission(loginUser, PERMISSIONS.COLLECTION_VIEW_DAILY_FOLLOWUPS_ASSIGNED),
-    ]);
 
-    const caseConditionsQueryOr: any[] = [];
-    if (_isBranchView && loginUser.branches && loginUser.branches.length > 0 && !_isSuperAdmin) {
-      caseConditionsQueryOr.push({ 'refCaseId.area': { $in: loginUser.branches } });
+    const caseConditionsQueryOr: { [key: string]: unknown }[] = [];
+    if (_isBranchView && !_isSuperAdmin) {
+      caseConditionsQueryOr.push({
+        'refCaseId.area': {
+          $in: loginUser.branches.length > 0 ? loginUser.branches : ['__NO_BRANCH__'],
+        },
+      });
     }
     if (_isAssignedView && !_isSuperAdmin) {
       caseConditionsQueryOr.push({
@@ -79,9 +91,12 @@ const getDailyFollowUpReport = async ({
       });
     }
 
-    if (caseConditionsQueryOr.length > 0) {
-      caseConditionsQuery.$or = caseConditionsQueryOr;
-    }
+    const permissionsQuery =
+      _isDailyFollowupViewOther || _isSuperAdmin
+        ? {}
+        : caseConditionsQueryOr.length > 0
+          ? { $or: caseConditionsQueryOr }
+          : { _id: null };
 
     const pipeline: any[] = [
       {
@@ -250,7 +265,7 @@ const getDailyFollowUpReport = async ({
         },
       },
       { $unwind: { path: '$refCaseId', preserveNullAndEmptyArrays: true } },
-      { $match: caseConditionsQuery },
+      { $match: { ...caseConditionsQuery, ...permissionsQuery } },
       {
         $match: {
           'refCaseId.dueEmi': { $gt: 0 },
@@ -307,7 +322,7 @@ const getDailyFollowUpReport = async ({
 
     return { data, total: total.length > 0 ? total[0].count : 0 };
   } catch (error) {
-    console.error('Error in getDailyFollowUpReport:', error);
+    logger.error('Error in getDailyFollowUpReport:', error);
     throw error;
   }
 };

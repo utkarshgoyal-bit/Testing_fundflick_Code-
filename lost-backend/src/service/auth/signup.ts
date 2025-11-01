@@ -5,7 +5,7 @@ import { encrypt } from '../../helper/encrypt';
 import { ErrorModel } from '../../interfaces/index';
 import { User } from '../../interfaces/user.interface';
 import Logger from '../../lib/logger';
-import UserSchema from '../../models/auth';
+import UserSchema from '../../schema/auth';
 import { COMPONENTS, ERROR, STATUS_CODE, SUCCESS } from '../../shared/enums';
 
 const signUp = async (payload: User) => {
@@ -15,7 +15,8 @@ const signUp = async (payload: User) => {
     const upsertPayload: User = {
       ...payload,
       loggedIn: payload.loggedIn || moment().unix(),
-      loggedFrom: payload.loggedFrom || 'platform:' + os.platform() + ' ' + 'hostname:' + os.hostname(),
+      loggedFrom:
+        payload.loggedFrom || 'platform:' + os.platform() + ' ' + 'hostname:' + os.hostname(),
       password: encryptedPassword,
       isActive: payload.isActive || false,
       createdAt: moment().unix(),

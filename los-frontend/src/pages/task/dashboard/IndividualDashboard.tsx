@@ -1,154 +1,169 @@
-import { Calendar } from '@/components/ui/calendar';
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { buildOrgRoute } from '@/helpers/routeHelper';
+import { ROUTES } from '@/lib/enums';
 import { RootState } from '@/redux/slices';
-import { format } from 'date-fns';
-import React from 'react';
-import { BsPersonCheckFill } from 'react-icons/bs';
-import { GoTasklist } from 'react-icons/go';
+import { ArrowUpRight, CircleCheckBig, LayoutList, Pickaxe, TimerOff } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { useNavigate } from 'react-router-dom';
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Label,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
-const statisticsData = [
-  { month: 'Jan', completed: 100, incomplete: 80 },
-  { month: 'Feb', completed: 120, incomplete: 90 },
-  { month: 'Mar', completed: 150, incomplete: 100 },
-  { month: 'Apr', completed: 180, incomplete: 120 },
-  { month: 'May', completed: 250, incomplete: 150 },
-  { month: 'Jun', completed: 270, incomplete: 200 },
-  { month: 'Jul', completed: 260, incomplete: 270 },
-  { month: 'Aug', completed: 100, incomplete: 50 },
-  { month: 'Sep', completed: 50, incomplete: 30 },
-  { month: 'Oct', completed: 20, incomplete: 10 },
-  { month: 'Nov', completed: 10, incomplete: 5 },
-  { month: 'Dec', completed: 5, incomplete: 2 },
-];
-
-function IndividualDashboard() {
+function IndividualDashboard({
+  setIncompleteTasksFilter,
+}: {
+  setIncompleteTasksFilter: (filter: 'pending' | 'inProgress') => void;
+}) {
+  const navigate = useNavigate();
   // const [filter, setFilter] = useState('Month');
   const { data } = useSelector((state: RootState) => state.taskDashboard);
-  const {
-    // assignedToMeTasks,
-    // dueTodayTasks,
-    incompleteTasks,
-    priorityWiseIncompleteTasks,
-    statusWiseTasks,
-    totalTasks,
-    completedTasks,
-  } = data;
+  const { priorityWiseIncompleteTasks, statusWiseTasks } = data;
   const performanceData = [
-    { name: 'On Track', value: statusWiseTasks.inProgress, color: '#10B981' },
-    { name: 'Before Time', value: statusWiseTasks.scheduled, color: '#FBBF24' },
-    { name: 'Delayed', value: statusWiseTasks.overdue, color: '#EF4444' },
+    { name: 'Pending', value: statusWiseTasks.pending, fill: '#FBBF24' },
+    { name: 'In Progress', value: statusWiseTasks.inProgress, fill: '#10B981' },
+    { name: 'Overdue', value: statusWiseTasks.overdue, fill: '#EF4444' },
   ];
   const summaryData = [
     {
-      title: 'Completed Tasks',
-      count: completedTasks,
+      label: 'Pending Tasks',
+      value: statusWiseTasks.pending,
       borderColor: 'border-green-500',
-      iconBg: 'bg-green-500',
-      icon: <GoTasklist className="w-6 h-6 text-white" />,
+      color: 'bg-yellow-500',
+      onClick: () => navigate(buildOrgRoute(`${ROUTES.TASK_MANAGEMENT}`)),
+      icon: <LayoutList className="w-6 h-6 text-text" />,
     },
     {
-      title: 'Incomplete Tasks',
-      count: incompleteTasks,
+      label: 'Inprogress Tasks',
+      value: statusWiseTasks.inProgress,
+      borderColor: 'border-green-500',
+      color: 'bg-blue-500',
+      onClick: () => navigate(buildOrgRoute(`${ROUTES.TASK_MANAGEMENT}`)),
+      icon: <Pickaxe className="w-6 h-6 text-text" />,
+    },
+    {
+      label: 'Overdue Tasks',
+      value: statusWiseTasks.overdue,
       borderColor: 'border-orange-400',
-      iconBg: 'bg-orange-400',
-      icon: <BsPersonCheckFill className="w-6 h-6 text-white" />,
+      color: 'bg-red-500',
+      onClick: () => navigate(buildOrgRoute(`${ROUTES.TASK_MANAGEMENT}`)),
+      icon: <TimerOff className="w-6 h-6 text-text" />,
     },
     {
-      title: 'Total Tasks',
-      count: totalTasks,
+      label: 'Completed Tasks',
+      value: statusWiseTasks.completed,
       borderColor: 'border-blue-500',
-      iconBg: 'bg-blue-500',
-      icon: <BsPersonCheckFill className="w-6 h-6 text-white" />,
+      color: 'bg-green-500',
+      onClick: () => navigate(buildOrgRoute(`${ROUTES.TASK_MANAGEMENT}`)),
+      icon: <CircleCheckBig className="w-6 h-6 text-text" />,
     },
   ];
 
   const incompleteTaskData = [
-    { name: 'Low', value: priorityWiseIncompleteTasks.low, color: '#0C4A6E' },
-    { name: 'Medium', value: priorityWiseIncompleteTasks.medium, color: '#FBBF24' },
-    { name: 'High', value: priorityWiseIncompleteTasks.high, color: '#A0522D' },
+    { priority: 'low', value: priorityWiseIncompleteTasks.low, fill: 'var(--color-warning)' },
+    { priority: 'medium', value: priorityWiseIncompleteTasks.medium, fill: 'var(--color-recurring)' },
+    { priority: 'high', value: priorityWiseIncompleteTasks.high, fill: 'var(--color-error)' },
   ];
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
-  // const filters = ['Default', 'Month', 'Week', 'Yesterday', 'Today'];
-  console.log(priorityWiseIncompleteTasks);
+  const incompleteTaskAnalysisChartConfig = {
+    low: {
+      label: 'Low',
+      color: 'var(--color-warning)',
+    },
+    medium: {
+      label: 'Medium',
+      color: 'var(--color-warning)',
+    },
+    high: {
+      label: 'High',
+      color: 'hsl(var(--color-error))',
+    },
+  } satisfies ChartConfig;
+  const completedTasksChartConfig = {
+    beforeTime: {
+      label: 'Before time',
+      color: 'var(--color-warning)',
+    },
+    onTime: {
+      label: 'On time',
+      color: 'var(--chart-1)',
+    },
+    delayed: {
+      label: 'Delayed',
+      color: 'var(--color-error)',
+    },
+  } satisfies ChartConfig;
+  const completedTasksChartData = [
+    { month: 'January', beforeTime: 186, onTime: 80, delayed: 50 },
+    { month: 'February', beforeTime: 305, onTime: 200, delayed: 150 },
+    { month: 'March', beforeTime: 237, onTime: 120, delayed: 250 },
+    { month: 'April', beforeTime: 73, onTime: 190, delayed: 90 },
+    { month: 'May', beforeTime: 209, onTime: 130, delayed: 10 },
+    { month: 'June', beforeTime: 214, onTime: 140, delayed: 110 },
+  ];
   return (
     <div className="p-6 bg-white rounded-md shadow-md space-y-6">
-      {/* Top right filter and tabs */}
-      {/* <div className="flex justify-end items-center space-x-2 border-b border-gray-200 pb-3">
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="border border-gray-300 rounded-md px-3 py-1 text-sm"
-        >
-          {filters.map((f) => (
-            <option key={f} value={f}>
-              {f}
-            </option>
-          ))}
-        </select>
-        <button className="border border-gray-300 rounded-md px-3 py-1 text-sm">All</button>
-        <button
-          className={`px-3 py-1 text-sm rounded-md ${
-            filter === 'Month' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
-          }`}
-          onClick={() => setFilter('Month')}
-        >
-          Month
-        </button>
-        <button
-          className={`px-3 py-1 text-sm rounded-md ${
-            filter === 'Week' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
-          }`}
-          onClick={() => setFilter('Week')}
-        >
-          Week
-        </button>
-        <button
-          className={`px-3 py-1 text-sm rounded-md ${
-            filter === 'Yesterday' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
-          }`}
-          onClick={() => setFilter('Yesterday')}
-        >
-          Yesterday
-        </button>
-        <button
-          className={`px-3 py-1 text-sm rounded-md ${
-            filter === 'Today' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
-          }`}
-          onClick={() => setFilter('Today')}
-        >
-          Today
-        </button>
-        <button className="border border-gray-300 rounded-md p-1">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 text-gray-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-        </button>
-      </div> */}
-
       {/* Summary Cards */}
-      <div className="grid grid-cols-3 gap-6">
-        {summaryData.map(({ title, count, borderColor, iconBg, icon }) => (
+      <div className="grid grid-cols-4 gap-6">
+        {summaryData.map((card, index) => (
           <div
-            key={title}
-            className={`flex items-center justify-between border-b-4 ${borderColor} bg-gray-50 p-4 rounded-md shadow-sm`}
+            key={index}
+            className={`group relative bg-gradient-to-br from-color-surface via-color-surface to-color-surface-muted border border-fg-border rounded-lg p-4 hover:shadow-lg transition-all duration-300 overflow-hidden ${'cursor-pointer hover:border-color-primary/30'}`}
+            onClick={card.onClick}
           >
-            <div>
-              <p className="text-sm font-semibold text-gray-700">{title}</p>
-              <p className="text-2xl font-bold">{count}</p>
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-3">
+              <div
+                className={`absolute top-0 right-0 w-16 h-16 ${card.color} rounded-full -translate-y-8 translate-x-8`}
+              ></div>
+              <div
+                className={`absolute bottom-0 left-0 w-12 h-12 bg-color-secondary rounded-full translate-y-6 -translate-x-6`}
+              ></div>
             </div>
-            <div className={`${iconBg} p-3 rounded-full`}>{icon}</div>
+
+            {/* Subtle Grid Pattern */}
+            <div
+              className="absolute inset-0 opacity-[0.015]"
+              style={{
+                backgroundImage: `radial-gradient(circle at 1px 1px, var(--fg-primary) 1px, transparent 0)`,
+                backgroundSize: '12px 12px',
+              }}
+            ></div>
+
+            {/* Gradient Overlay */}
+            <div
+              className={`absolute inset-0 bg-gradient-to-r ${'from-color-primary/3 via-transparent to-color-secondary/3'}`}
+            ></div>
+
+            {/* Card Header */}
+            <div className="flex items-center justify-between mb-3 relative z-10">
+              <div className={`p-2 rounded-lg border `}>{card.icon}</div>
+
+              <ArrowUpRight className="h-3 w-3 text-fg-tertiary opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+
+            {/* Card Content */}
+            <div className="relative z-10">
+              <div className="text-xl font-bold text-fg-primary mb-1 leading-tight">{card.value}</div>
+              <div className="flex items-center justify-between text-xs">{card.label}</div>
+            </div>
           </div>
         ))}
       </div>
@@ -156,36 +171,125 @@ function IndividualDashboard() {
       {/* Analysis Sections */}
       <div className="grid grid-cols-2 gap-6">
         <div className="bg-white rounded-md shadow p-4">
-          <h3 className="font-semibold mb-4">Incomplete Task Analysis</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={incompleteTaskData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill="#0C4A6E" barSize={10} />
-            </BarChart>
+          <h3 className="font-semibold mb-4 text-2xl">Incomplete Task Analysis</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <div className="flex justify-between px-4">
+              <Tabs defaultValue="pending" className="w-[400px]">
+                <TabsList>
+                  <TabsTrigger onClick={() => setIncompleteTasksFilter('pending')} value="pending">
+                    Pending
+                  </TabsTrigger>
+                  <TabsTrigger onClick={() => setIncompleteTasksFilter('inProgress')} value="inProgress">
+                    In Progress
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="pending">
+                  <ChartContainer
+                    config={incompleteTaskAnalysisChartConfig}
+                    className="mx-auto aspect-square max-h-[250px]"
+                  >
+                    <PieChart>
+                      <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                      <Pie
+                        data={incompleteTaskData}
+                        dataKey="value"
+                        nameKey="priority"
+                        innerRadius={60}
+                        strokeWidth={5}
+                      >
+                        <Label
+                          content={({ viewBox }) => {
+                            if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
+                              return (
+                                <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
+                                  <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-3xl font-bold">
+                                    {Object.values(incompleteTaskData)
+                                      .reduce((acc, item) => acc + item.value, 0)
+                                      .toLocaleString()}
+                                  </tspan>
+                                  <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 24} className="fill-muted-foreground">
+                                    Visitors
+                                  </tspan>
+                                </text>
+                              );
+                            }
+                          }}
+                        />
+                      </Pie>
+                    </PieChart>
+                  </ChartContainer>
+                </TabsContent>
+                <TabsContent value="inProgress">
+                  <ChartContainer
+                    config={incompleteTaskAnalysisChartConfig}
+                    className="mx-auto aspect-square max-h-[250px]"
+                  >
+                    <PieChart>
+                      <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                      <Pie
+                        data={incompleteTaskData}
+                        dataKey="value"
+                        nameKey="priority"
+                        innerRadius={60}
+                        strokeWidth={5}
+                      >
+                        <Label
+                          content={({ viewBox }) => {
+                            if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
+                              return (
+                                <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
+                                  <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-3xl font-bold">
+                                    {Object.values(incompleteTaskData)
+                                      .reduce((acc, item) => acc + item.value, 0)
+                                      .toLocaleString()}
+                                  </tspan>
+                                  <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 24} className="fill-muted-foreground">
+                                    Visitors
+                                  </tspan>
+                                </text>
+                              );
+                            }
+                          }}
+                        />
+                      </Pie>
+                    </PieChart>
+                  </ChartContainer>
+                </TabsContent>
+              </Tabs>
+              <div>
+                <div className=" mt-4 ">
+                  {incompleteTaskData.map((entry) => (
+                    <div key={entry.priority} className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded" style={{ backgroundColor: entry.fill }}></div>
+                      <span className="text-lg capitalize">{entry.priority}</span>
+                      <span className="text-lg font-medium">{entry.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </ResponsiveContainer>
         </div>
 
         {/* Performance Analysis */}
         <div className="bg-white rounded-md shadow p-4">
           <div className="flex flex-row justify-between items-center mb-10 mt-2  ">
-            <h1 className="font-bold text-2xl w-1/3 ">Performance Analysis</h1>
+            <h1 className="font-bold text-2xl w-1/2 ">Upcoming Task</h1>
             <div className="flex items-center space-x-2 mb-4">
-              <span className="flex items-center space-x-3  text-green-600">
-                <div className="w-3 h-3 rounded bg-green-600"></div>
-                <span>On Track</span>
-                <span className="ml-1">{statusWiseTasks.inProgress}</span>
-              </span>
               <span className="flex items-center space-x-1 text-yellow-500">
                 <div className="w-3 h-3 rounded bg-yellow-500"></div>
-                <span>Before Time</span>
-                <span className="ml-1">{statusWiseTasks.scheduled}</span>
+                <span>Pending</span>
+                <span className="ml-1">{statusWiseTasks.pending}</span>
               </span>
+              <span className="flex items-center space-x-3  text-green-600">
+                <div className="w-3 h-3 rounded bg-green-600"></div>
+                <span>In Progress</span>
+                <span className="ml-1">{statusWiseTasks.inProgress}</span>
+              </span>
+
               <span className="flex items-center space-x-1 text-red-600">
                 <div className="w-3 h-3 rounded bg-red-600"></div>
-                <span>Delayed</span>
+                <span>Overdue</span>
                 <span className="ml-1">{statusWiseTasks.overdue}</span>
               </span>
             </div>
@@ -202,55 +306,61 @@ function IndividualDashboard() {
               />
               <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} width={80} />
               <Tooltip />
-              <Bar dataKey="value" fill="#10B981" />
+              <Bar dataKey="value" fill="#000" />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
+      <div className=" bg-white my-2 rounded-md  p-4 shadow-md">
+        <h3 className="font-semibold mb-4 text-2xl">Completed Task Analysis</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <ChartContainer config={completedTasksChartConfig} className="mx-auto max-h-[300px]">
+            <AreaChart
+              accessibilityLayer
+              data={completedTasksChartData}
+              margin={{
+                left: 12,
+                right: 12,
+              }}
+            >
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="month"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                tickFormatter={(value) => value.slice(0, 3)}
+              />
+              <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+              <Area
+                dataKey="beforeTime"
+                type="natural"
+                fill="var(--color-beforeTime)"
+                fillOpacity={0.4}
+                stroke="var(--color-beforeTime)"
+                stackId="a"
+              />
 
-      <div className="flex gap-4 mt-4">
-        {/* Statistics Chart */}
-        <div className="flex-1 bg-white rounded-md shadow p-4 border">
-          <div className="flex space-x-4 justify-between mt-2 text-sm text-gray-600">
-            <h3 className="font-semibold mb-4">Statistics</h3>
-            <div className="flex flex-row gap-3">
-              <div className="flex items-center space-x-1">
-                <div className="w-3 h-3 rounded bg-green-500"></div>
-                <span>Completed</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <div className="w-3 h-3 rounded bg-red-500"></div>
-                <span>Incomplete</span>
-              </div>
-              <button className="ml-auto border border-gray-300 rounded px-2 py-1 text-xs">Monthly</button>
-              <button className="border border-gray-300 rounded px-2 py-1 text-xs">Weekly</button>
-              <button className="border border-gray-300 rounded px-2 py-1 text-xs">My Task</button>
-            </div>
-          </div>
-
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={statisticsData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="completed" stroke="#10B981" strokeWidth={3} />
-              <Line type="monotone" dataKey="incomplete" stroke="#EF4444" strokeWidth={3} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Calendar */}
-        <div className="w-[18rem] bg-white rounded-md shadow p-4 border">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={(d) => setDate(d)}
-            className="rounded-md border shadow-sm"
-            captionLayout="dropdown"
-          />
-          <h1 className="font-semibold mt-2 underline">{date ? format(date, 'MMMM d, yyyy') : 'No date selected'}</h1>
-        </div>
+              <Area
+                dataKey="onTime"
+                type="natural"
+                fill="var(--color-onTime)"
+                fillOpacity={0.4}
+                stroke="var(--color-onTime)"
+                stackId="a"
+              />
+              <Area
+                dataKey="delayed"
+                type="natural"
+                fill="var(--color-delayed)"
+                fillOpacity={0.4}
+                stroke="var(--color-delayed)"
+                stackId="a"
+              />
+              <ChartLegend content={<ChartLegendContent />} />
+            </AreaChart>
+          </ChartContainer>
+        </ResponsiveContainer>
       </div>
     </div>
   );

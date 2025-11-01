@@ -17,15 +17,17 @@ function* acceptSaga(action: TasksAction) {
       {},
       true,
       {
-        pending: 'Getting file handlers',
-        success: 'File handlers retrieved successfully',
-        error: 'An error occurred while getting file handlers',
+        pending: 'Accepting task',
+        success: 'Task accepted successfully',
+        error: 'An error occurred while accepting task',
       }
     );
     if (response.data) {
       yield put({ type: FETCH_TASKS_DATA, payload: { silent: true } });
     } else if (response.error) {
       yield put(setError(response.error));
+    } else {
+      yield put({ type: FETCH_TASKS_DATA, payload: { silent: true } });
     }
   } catch (error) {
     console.error('Fetch data failed', error);

@@ -1,8 +1,8 @@
-import { Types } from "mongoose";
-import { EmployeeSchema } from "../../../../models";
-import customerFileSchema from "../../../../models/customerFile";
-import { ERROR, STEPS_NAMES } from "../../../../shared/enums";
-import CustomerFileStatusNotification from "../../../../socket/sendNotification";
+import { Types } from 'mongoose';
+import { EmployeeSchema } from '../../../../schema';
+import customerFileSchema from '../../../../schema/customerFile';
+import { ERROR, STEPS_NAMES } from '../../../../shared/enums';
+import CustomerFileStatusNotification from '../../../../socket/sendNotification';
 
 const addCustomerLiability = async ({
   fileId,
@@ -34,14 +34,14 @@ const addCustomerLiability = async ({
   if (!loginUserDetails) {
     throw ERROR.USER_NOT_FOUND;
   }
-  if (customerFile.status !== "Pending") {
+  if (customerFile.status !== 'Pending') {
     CustomerFileStatusNotification({
       loanApplicationNumber: customerFile.loanApplicationNumber,
       creator: customerFile.createdBy,
       customerFileId: customerFile._id,
       updater: loginUser,
       message: {
-        message: `${loginUserDetails.firstName + " " + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role}) has updated liability details of the file`,
+        message: `${loginUserDetails.firstName + ' ' + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role}) has updated liability details of the file`,
         title: `File FI-${customerFile.loanApplicationNumber} liability details is updated `,
       },
       organization: loginUser.organization._id,

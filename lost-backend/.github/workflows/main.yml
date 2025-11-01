@@ -3,7 +3,7 @@ name: Deploy prod-backend
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   deploy:
@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Setup Prisma
+        run: npx prisma generate
+
       - name: Build project
         run: pnpm run build
 
@@ -33,7 +36,7 @@ jobs:
           PORT=${{ secrets.PROD_PORT }}
           DATABASE_URL=${{ secrets.DATABASE_URL }}
           MAITRII_PASSWORD=${{ secrets.MAITRII_PASSWORD }}
-          DB_ENV=${{ secrets.PROD_DB_ENV }}
+          DB_ENV=prod
           JWT_SECRET_SALT=${{ secrets.JWT_SECRET_SALT }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           DB_CONFIG=${{ secrets.DB_CONFIG }}
@@ -50,7 +53,7 @@ jobs:
           SMS_API_KEY=${{ secrets.SMS_API_KEY }}
           SMS_API_ROUTE=${{ secrets.SMS_API_ROUTE }}
           FIREBASE_SERVICE_ACCOUNT=${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          VITE_API_ENV="prod"
+          POSTGRES_URL=${{ secrets.POSTGRES_URL }}
           EOT
 
       - name: Clean up before deploy
@@ -74,6 +77,7 @@ jobs:
 
           cd /root/prod/prod-backend
           pnpm install --prod --ignore-scripts
+          npx prisma generate
 
           if pm2 list | grep -q "prod-backend"; then
             pm2 stop prod-backend

@@ -1,5 +1,5 @@
-import { Types } from "mongoose";
-import CollectionModel from "../../../models/collection/dataModel";
+import { Types } from 'mongoose';
+import CollectionModel from '../../../schema/collection/dataModel';
 const addCaseContact = async ({
   body,
   loginUser,
@@ -14,19 +14,19 @@ const addCaseContact = async ({
 }) => {
   const { contactNo, coApplicantName, isCoApplicant, caseNo } = body;
 
-  if (!caseNo) throw new Error("Case number is required");
+  if (!caseNo) throw new Error('Case number is required');
   if (isCoApplicant) {
-    if (!coApplicantName) throw new Error("Co-Applicant name is required");
+    if (!coApplicantName) throw new Error('Co-Applicant name is required');
     const data = await CollectionModel.findOneAndUpdate(
       {
         caseNo,
-        "coApplicantsData.name": coApplicantName,
+        'coApplicantsData.name': coApplicantName,
         organization: loginUser.organization._id,
       },
       {
         $push: {
-          "coApplicantsData.$[elem].contactNo": {
-            $each: contactNo.map((num) => num.trim()),
+          'coApplicantsData.$[elem].contactNo': {
+            $each: contactNo.map(num => num.trim()),
           },
         },
         $set: {
@@ -35,11 +35,11 @@ const addCaseContact = async ({
       },
       {
         new: true,
-        arrayFilters: [{ "elem.name": coApplicantName }],
+        arrayFilters: [{ 'elem.name': coApplicantName }],
       }
     );
 
-    if (!data) throw new Error("Case or co-applicant not found");
+    if (!data) throw new Error('Case or co-applicant not found');
 
     return true;
   } else {
@@ -48,7 +48,7 @@ const addCaseContact = async ({
       {
         $push: {
           contactNo: {
-            $each: contactNo.map((num) => num.trim()),
+            $each: contactNo.map(num => num.trim()),
           },
         },
         $set: {
@@ -58,7 +58,7 @@ const addCaseContact = async ({
       { new: true, upsert: false }
     );
 
-    if (!data) throw new Error("Case not found");
+    if (!data) throw new Error('Case not found');
 
     return true;
   }

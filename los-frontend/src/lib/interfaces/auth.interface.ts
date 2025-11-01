@@ -10,6 +10,7 @@ export interface IUserInitialState {
       lastLogin: string;
       loggedFrom: string;
       isActive: boolean;
+      role: string;
       _id: string;
     };
     role: string;

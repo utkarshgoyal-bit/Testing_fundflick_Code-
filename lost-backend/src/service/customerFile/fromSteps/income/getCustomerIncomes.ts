@@ -1,14 +1,14 @@
-import { filesCommonSelectedData } from "../../main";
-import customerFileSchema from "../../../../models/customerFile";
-import { ERROR } from "../../../../shared/enums";
+import customerFileSchema from '../../../../schema/customerFile';
+import { ERROR } from '../../../../shared/enums';
+import { filesCommonSelectedData } from '../../main';
 const getCustomerIncomes = async ({ id, loginUser }: { id: string; loginUser: any }) => {
   const customerFile = await customerFileSchema
     .findOne({
       _id: id,
       organization: loginUser.organization._id,
     })
-    .populate("customerOtherFamilyDetails.customerDetails")
-    .populate("customerDetails")
+    .populate('customerOtherFamilyDetails.customerDetails')
+    .populate('customerDetails')
     .select({
       customerOtherFamilyDetails: 1,
       customerEmploymentDetails: 1,

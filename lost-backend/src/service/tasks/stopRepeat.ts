@@ -1,8 +1,8 @@
-import { Types } from "mongoose";
-import { User } from "../../interfaces/user.interface";
-import TasksSchema from "../../models/tasks";
-import { ERROR } from "../../shared/enums";
-import { TasksUpdateNotification } from "../../socket/sendNotification";
+import { Types } from 'mongoose';
+import { REPEAT_STATUS } from '../../enums/task.enum';
+import TasksSchema from '../../schema/tasks';
+import { ERROR } from '../../shared/enums';
+import { TasksUpdateNotification } from '../../socket/sendNotification';
 
 export default async function stopRepeat({ loginUser, body }: { loginUser: any; body: any }) {
   const { taskId } = body;
@@ -13,7 +13,7 @@ export default async function stopRepeat({ loginUser, body }: { loginUser: any; 
       organization: loginUser.organization._id,
     },
     {
-      repeat: "noRepeat",
+      repeat: REPEAT_STATUS.NO_REPEAT,
       updatedAt: new Date(),
       updatedBy: new Types.ObjectId(loginUser.employeeId),
     },
@@ -27,7 +27,7 @@ export default async function stopRepeat({ loginUser, body }: { loginUser: any; 
   await TasksUpdateNotification({
     users: [
       ...updatedTask.users.map((user: any) =>
-        user instanceof Types.ObjectId || typeof user === "string" ? user : user.userDetails
+        user instanceof Types.ObjectId || typeof user === 'string' ? user : user.employeeId
       ),
       updatedTask.createdBy,
     ],
@@ -40,7 +40,7 @@ export default async function stopRepeat({ loginUser, body }: { loginUser: any; 
         updatedTask.description ? `Note: ${updatedTask.description}` : null,
       ]
         .filter(Boolean)
-        .join(", "),
+        .join(', '),
     },
     organization: loginUser.organization._id,
   });

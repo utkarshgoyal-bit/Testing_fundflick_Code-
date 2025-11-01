@@ -1,21 +1,32 @@
-import { Types } from "mongoose";
-import { uploadFileToS3 } from "../../../../aws/s3";
-import CustomerFileModel from "../../../../models/customerFile";
-import CustomersModel from "../../../../models/customerFile/customers";
-import { ERROR, STEPS_NAMES } from "../../../../shared/enums";
+import { Types } from 'mongoose';
+import { uploadFileToS3 } from '../../../../aws/s3';
+import CustomerFileModel from '../../../../schema/customerFile';
+import CustomersModel from '../../../../schema/customerFile/customers';
+import { ERROR, STEPS_NAMES } from '../../../../shared/enums';
 
-const addCustomerDetails = async ({ files, body, loginUser }: { body: any; files: any; loginUser: any }) => {
+const addCustomerDetails = async ({
+  files,
+  body,
+  loginUser,
+}: {
+  body: any;
+  files: any;
+  loginUser: any;
+}) => {
   if (!loginUser) {
     throw ERROR.USER_NOT_FOUND;
   }
   const loanApplicationNumber =
-    (await CustomerFileModel.find({ organization: loginUser.organization._id }).countDocuments().lean()) + 1;
+    (await CustomerFileModel.find({ organization: loginUser.organization._id })
+      .countDocuments()
+      .lean()) + 1;
   if (files) {
-    const { "customerDetails[uidBack]": uidBackImage, "customerDetails[uidFront]": uidFrontImage } = files;
+    const { 'customerDetails[uidBack]': uidBackImage, 'customerDetails[uidFront]': uidFrontImage } =
+      files;
     if (uidFrontImage) {
       const uidFront = await uploadFileToS3(
         uidFrontImage[0].path,
-        `${loanApplicationNumber}/${"uidFront" + new Date()}`,
+        `${loanApplicationNumber}/${'uidFront' + new Date()}`,
         uidFrontImage[0].mimetype
       );
       body.customerDetails.uidFront = uidFront;
@@ -23,7 +34,7 @@ const addCustomerDetails = async ({ files, body, loginUser }: { body: any; files
     if (uidBackImage) {
       const uidBack = await uploadFileToS3(
         uidBackImage[0].path,
-        `${loanApplicationNumber}/${"uidBack" + new Date()}`,
+        `${loanApplicationNumber}/${'uidBack' + new Date()}`,
         uidBackImage[0].mimetype
       );
       body.customerDetails.uidBack = uidBack;

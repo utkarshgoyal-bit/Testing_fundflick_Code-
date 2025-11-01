@@ -1,47 +1,56 @@
-import { checkPassword } from "../../helper/encrypt";
-import { User } from "../../interfaces/user.interface";
-import Logger from "../../lib/logger";
-import { generateToken } from "../../lib/token";
-import UserSchema from "../../models/auth";
-import EmployeeSchema from "../../models/employee";
-import { ERROR, STATUS, STATUS_CODE, SUCCESS } from "../../shared/enums";
+import { checkPassword } from '../../helper/encrypt';
+import { User } from '../../interfaces/user.interface';
+import Logger from '../../lib/logger';
+import { generateToken } from '../../lib/token';
+import UserSchema from '../../schema/auth';
+import EmployeeSchema from '../../schema/employee';
+import { ERROR, STATUS, STATUS_CODE, SUCCESS } from '../../shared/enums';
 
 const login = async (payload: User) => {
-  const employee = await EmployeeSchema.findOne({ email: payload.email });
+  const { email, password, browser, os, loggedIn, updatedAt } = payload;
+  const employee = await EmployeeSchema.findOne({ email }).where({
+    MONGO_DELETED: false,
+  });
   if (employee) {
     const user: User | null = await UserSchema.findOne<User>({
       employeeId: employee._id,
-    }).populate<{ organizations: any }>(["roleRef", "organizations"]);
-    const payloadPassword = payload.password;
+    })
+      .where({ MONGO_DELETED: false })
+      .populate<{
+        organizations: Array<{
+          name: string;
+          _id: string;
+          status: string;
+          isActive: boolean;
+          id: string;
+        }>;
+      }>(['roleRef', 'organizations']);
+    const payloadPassword = password;
     if (user) {
       const isPasswordMatched = await checkPassword(payloadPassword, user.password);
       if (!user?.isActive || user?.organizations[0]?.status !== STATUS.ACTIVE) {
-        Logger.error("MODEL:LOGIN:DEACTIVATED", ERROR.USER_DEACTIVATED);
+        Logger.error('MODEL:LOGIN:DEACTIVATED', ERROR.USER_DEACTIVATED);
         throw ERROR.USER_DEACTIVATED;
       }
       if (isPasswordMatched) {
         const token = await generateToken({ user, email: payload.email });
-        const userInfo = [user].map(({ employeeId, email, role, branches, loggedIn, loggedFrom, isActive, _id }) => ({
-          employeeId,
-          email,
-          role,
-          branches,
-          loggedIn,
-          loggedFrom,
-          isActive,
-          _id,
-        }));
-        console.log("userInfo", {
-          browser: payload.browser,
-          os: payload.os,
-          lastLogin: payload.loggedIn,
-          loggedFrom: payload.loggedFrom,
-        });
+        const userInfo = [user].map(
+          ({ employeeId, email, role, branches, loggedIn, loggedFrom, isActive, _id }) => ({
+            employeeId,
+            email,
+            role,
+            branches,
+            loggedIn,
+            loggedFrom,
+            isActive,
+            _id,
+          })
+        );
         await UserSchema.updateOne({
-          browser: payload.browser,
-          os: payload.os,
-          loggedIn: payload.loggedIn,
-          updatedAt: payload.updatedAt,
+          browser: browser,
+          os: os,
+          loggedIn: loggedIn,
+          updatedAt: updatedAt,
         });
         return {
           user: userInfo,
@@ -54,21 +63,21 @@ const login = async (payload: User) => {
           })),
           employment: employee,
           token,
-          status: STATUS_CODE["200"],
+          status: STATUS_CODE['200'],
           message: SUCCESS.LOGIN_SUCCESS,
           errorStatus: false,
-          error: "",
+          error: '',
         };
       } else {
-        Logger.error("MODEL:LOGIN:INVALID_CREDENTIALS", ERROR.INVALID_CREDENTIALS);
+        Logger.error('MODEL:LOGIN:INVALID_CREDENTIALS', ERROR.INVALID_CREDENTIALS);
         throw ERROR.INVALID_CREDENTIALS;
       }
     } else {
-      Logger.error("MODEL:LOGIN:USER_NOT_FOUND", ERROR.USER_NOT_FOUND);
+      Logger.error('MODEL:LOGIN:USER_NOT_FOUND', ERROR.USER_NOT_FOUND);
       throw ERROR.USER_NOT_FOUND;
     }
   } else {
-    Logger.error("MODEL:LOGIN:USER_NOT_FOUND", ERROR.USER_NOT_FOUND);
+    Logger.error('MODEL:LOGIN:USER_NOT_FOUND', ERROR.USER_NOT_FOUND);
     throw ERROR.USER_NOT_FOUND;
   }
 };

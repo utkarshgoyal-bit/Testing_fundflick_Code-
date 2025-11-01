@@ -1,22 +1,22 @@
-import { Request, Response } from "express";
-import { ApiResponseHandler, StatusCodes } from "../../helper/responseHelper";
+import { Request, Response } from 'express';
+import { ApiResponseHandler } from '../../helper/responseHelper';
 import {
+  addIncomeDetails,
+  addLiabilityDetails,
+  deleteIncomeDetails,
+  deleteLiabilityDetails,
+  editIncomeDetails,
+  editLiabilityDetails,
+  getFamilyDetails,
+  getIncomeDetails,
+  getLiabilityDetails,
   getPersonalDetails,
   getPropertyDetails,
-  getFamilyDetails,
   updateFamilyDetails,
   updatePersonalDetails,
   updatePropertyDetails,
-  getIncomeDetails,
-  deleteIncomeDetails,
-  editIncomeDetails,
-  addIncomeDetails,
-  deleteLiabilityDetails,
-  addLiabilityDetails,
-  editLiabilityDetails,
-  getLiabilityDetails,
-} from "../../service/credit";
-import { ERROR, SUCCESS } from "../../shared/enums";
+} from '../../service/credit';
+import { ERROR, SUCCESS, StatusCodes } from '../../shared/enums';
 class CreditController {
   async getCreditPersonalDetails(req: Request, res: Response): Promise<void> {
     try {
@@ -26,7 +26,7 @@ class CreditController {
       } = req;
 
       const response = await getPersonalDetails(fileId as string, loginUser);
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Credit " + SUCCESS.FETCHED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Credit ' + SUCCESS.FETCHED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -39,7 +39,7 @@ class CreditController {
       } = req;
 
       const response = await getPropertyDetails(fileId as string, loginUser);
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Credit " + SUCCESS.FETCHED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Credit ' + SUCCESS.FETCHED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -52,7 +52,7 @@ class CreditController {
       } = req;
 
       const response = await getFamilyDetails(fileId as string, loginUser);
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Credit " + SUCCESS.FETCHED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Credit ' + SUCCESS.FETCHED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -67,7 +67,7 @@ class CreditController {
       } = req;
 
       const response = await updateFamilyDetails(fileId as string, body, loginUser);
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Credit " + SUCCESS.UPDATED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Credit ' + SUCCESS.UPDATED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -81,7 +81,7 @@ class CreditController {
       } = req;
 
       const response = await updatePersonalDetails(fileId as string, body, loginUser);
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Credit " + SUCCESS.UPDATED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Credit ' + SUCCESS.UPDATED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -95,7 +95,7 @@ class CreditController {
       } = req;
 
       const response = await updatePropertyDetails(fileId as string, body, loginUser);
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Credit " + SUCCESS.UPDATED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Credit ' + SUCCESS.UPDATED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -108,7 +108,7 @@ class CreditController {
       } = req;
 
       const response = await getIncomeDetails(fileId as string, loginUser);
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Credit " + SUCCESS.FETCHED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Credit ' + SUCCESS.FETCHED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -121,7 +121,7 @@ class CreditController {
         loginUser,
       } = req;
       const response = await deleteIncomeDetails(fileId, id as string, loginUser);
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Credit " + SUCCESS.UPDATED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Credit ' + SUCCESS.UPDATED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -135,7 +135,7 @@ class CreditController {
         loginUser,
       } = req;
       const response = await editIncomeDetails(fileId, id as string, body, loginUser);
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Credit " + SUCCESS.UPDATED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Credit ' + SUCCESS.UPDATED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -148,7 +148,7 @@ class CreditController {
         loginUser,
       } = req;
       const response = await addIncomeDetails(fileId, body, loginUser);
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Credit " + SUCCESS.UPDATED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Credit ' + SUCCESS.UPDATED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -162,7 +162,7 @@ class CreditController {
       } = req;
 
       const response = await getLiabilityDetails(fileId as string, loginUser);
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Credit " + SUCCESS.FETCHED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Credit ' + SUCCESS.FETCHED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -175,7 +175,7 @@ class CreditController {
         loginUser,
       } = req;
       const response = await deleteLiabilityDetails(fileId, id as string, loginUser);
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Credit " + SUCCESS.UPDATED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Credit ' + SUCCESS.UPDATED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -189,7 +189,7 @@ class CreditController {
         loginUser,
       } = req;
       const response = await editLiabilityDetails(fileId, id as string, body, loginUser);
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Credit " + SUCCESS.UPDATED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Credit ' + SUCCESS.UPDATED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -202,7 +202,7 @@ class CreditController {
         loginUser,
       } = req;
       const response = await addLiabilityDetails(fileId, body, loginUser);
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Credit " + SUCCESS.UPDATED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Credit ' + SUCCESS.UPDATED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }

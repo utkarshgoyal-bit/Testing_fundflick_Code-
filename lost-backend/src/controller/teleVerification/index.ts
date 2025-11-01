@@ -1,14 +1,21 @@
-import { Request, Response } from "express";
-import { ZodError } from "zod";
-import { ApiResponseHandler, StatusCodes } from "../../helper/responseHelper";
-import { TelephoneQuestionService } from "../../service/index";
-import { ERROR, SUCCESS } from "../../shared/enums";
+import { Request, Response } from 'express';
+import { ZodError } from 'zod';
+import { ApiResponseHandler } from '../../helper/responseHelper';
+import { TelephoneQuestionService } from '../../service/index';
+import { ERROR, SUCCESS, StatusCodes } from '../../shared/enums';
 
 class TeleVerificationController {
   getTelephoneQuestion = async (req: Request, res: Response) => {
     try {
-      const telephoneQuestions = await TelephoneQuestionService.getTelephoneQuestions(req.loginUser);
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, telephoneQuestions, "Telephone Question " + SUCCESS.FETCHED);
+      const telephoneQuestions = await TelephoneQuestionService.getTelephoneQuestions(
+        req.loginUser
+      );
+      ApiResponseHandler.sendResponse(
+        res,
+        StatusCodes.OK,
+        telephoneQuestions,
+        'Telephone Question ' + SUCCESS.FETCHED
+      );
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -20,7 +27,12 @@ class TeleVerificationController {
         body: req.body,
         loginUser: req.loginUser,
       });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, telephoneQuestion, "Telephone Question " + SUCCESS.CREATED);
+      ApiResponseHandler.sendResponse(
+        res,
+        StatusCodes.OK,
+        telephoneQuestion,
+        'Telephone Question ' + SUCCESS.CREATED
+      );
     } catch (error) {
       if (error instanceof ZodError) {
         return ApiResponseHandler.sendErrorResponse(res, error.errors, ERROR.BAD_REQUEST);
@@ -31,12 +43,15 @@ class TeleVerificationController {
 
   editTelephoneQuestion = async (req: Request, res: Response) => {
     try {
-      const telephoneQuestion = await TelephoneQuestionService.editTelephoneQuestion(req.body, req.loginUser);
+      const telephoneQuestion = await TelephoneQuestionService.editTelephoneQuestion(
+        req.body,
+        req.loginUser
+      );
       return ApiResponseHandler.sendResponse(
         res,
         StatusCodes.OK,
         telephoneQuestion,
-        "Telephone Question " + SUCCESS.UPDATED
+        'Telephone Question ' + SUCCESS.UPDATED
       );
     } catch (error) {
       if (error instanceof ZodError) {
@@ -53,7 +68,12 @@ class TeleVerificationController {
         id,
         loginUser: req.loginUser,
       });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, telephoneQuestion, "Telephone Question " + SUCCESS.DELETED);
+      ApiResponseHandler.sendResponse(
+        res,
+        StatusCodes.OK,
+        telephoneQuestion,
+        'Telephone Question ' + SUCCESS.DELETED
+      );
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -66,7 +86,12 @@ class TeleVerificationController {
         id,
         loginUser: req.loginUser,
       });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, telephoneQuestion, "Telephone Question " + SUCCESS.FETCHED);
+      ApiResponseHandler.sendResponse(
+        res,
+        StatusCodes.OK,
+        telephoneQuestion,
+        'Telephone Question ' + SUCCESS.FETCHED
+      );
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }

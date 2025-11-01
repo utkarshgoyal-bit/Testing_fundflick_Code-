@@ -107,6 +107,7 @@ export interface ITaskTable {
   dueAfterDays: number;
   type: string;
   acceptedBy: string;
+  dueDateInMessage: string;
   timeline: {
     comment: string;
     createdAt: number;
@@ -136,6 +137,7 @@ export interface ITaskTable {
   priorityOfTask: number;
   cc: string[];
   isPinned: boolean;
+  isBulkTask?: boolean;
   comments: [
     {
       comment: string;
@@ -306,7 +308,6 @@ export interface IClientTable {
     subCategories: {
       _id: string;
       returnName: string;
-      frequency: 'monthly' | 'quarterly' | 'yearly' | string;
       description?: string;
     }[];
     orgName?: string;
@@ -331,14 +332,13 @@ export interface IClientTable {
 export interface IServiceTable {
   _id: string;
   serviceName: string;
-  departmentId: {
+  departments: {
     _id: string;
     departmentName: string;
     description: string;
   };
   subCategories: {
     returnName: string;
-    frequency: string;
     description?: string;
     dueAfter?: number;
   }[];

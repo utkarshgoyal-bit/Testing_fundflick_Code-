@@ -1,8 +1,8 @@
-import { Types } from "mongoose";
-import { EmployeeSchema } from "../../../models";
-import CustomerFileSchema from "../../../models/customerFile";
-import { ERROR } from "../../../shared/enums";
-import CustomerFileStatusNotification from "../../../socket/sendNotification";
+import { Types } from 'mongoose';
+import { EmployeeSchema } from '../../../schema';
+import CustomerFileSchema from '../../../schema/customerFile';
+import { ERROR } from '../../../shared/enums';
+import CustomerFileStatusNotification from '../../../socket/sendNotification';
 
 const updateFileComments = async ({
   loanApplicationNumber,
@@ -33,7 +33,7 @@ const updateFileComments = async ({
     customerFileId: customer._id,
     updater: loginUser,
     message: {
-      message: `${loginUserDetails.firstName + " " + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role}) has added a  new comment  on file`,
+      message: `${loginUserDetails.firstName + ' ' + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role}) has added a  new comment  on file`,
       title: `New comment added on file no ${customer.loanApplicationNumber}`,
     },
     organization: loginUser.organization._id,

@@ -1,13 +1,20 @@
-import { Types } from "mongoose";
-import TelephoneQuestionSchema from "../../models/telephoneQuestions";
+import { Types } from 'mongoose';
+import { LoginUser } from '../../interfaces';
+import TelephoneQuestionSchema from '../../schema/telephoneQuestions';
 
-const getTelephoneQuestionById = async ({ id, loginUser }: { id: string; loginUser: any }) => {
+const getTelephoneQuestionById = async ({
+  id,
+  loginUser,
+}: {
+  id: string;
+  loginUser: LoginUser;
+}) => {
   const telephoneQuestion = await TelephoneQuestionSchema.findById({
     _id: new Types.ObjectId(id),
     organization: loginUser.organization._id,
   });
   if (!telephoneQuestion) {
-    throw "Telephone Question not found";
+    throw 'Telephone Question not found';
   }
   return telephoneQuestion;
 };

@@ -8,6 +8,7 @@ import { OrganizationForm } from '@/pages/organizationAdmin/form';
 import Roles from '@/pages/roles';
 import Client from '@/pages/task/clientService';
 import AddClient from '@/pages/task/clientService/addClient';
+import ClientLedger from '@/pages/task/clientService/ClientLedger';
 import TaskDashboard from '@/pages/task/dashboard';
 import TaskManager from '@/pages/task/taskManager';
 import ManageTasks from '@/pages/task/taskManager/manageTasks';
@@ -362,6 +363,14 @@ const protectedRoutes = [
   {
     path: 'task-management/manage-tasks',
     element: <ManageTasks />,
+    label: 'Manage Tasks',
+    group: 'hidden',
+    module: APP_MODULES.TASK,
+    permissionName: PERMISSIONS.TASK_TAB,
+  },
+  {
+    path: 'task-management/client-ledger/:id',
+    element: <ClientLedger />,
     label: 'Manage Tasks',
     group: 'hidden',
     module: APP_MODULES.TASK,

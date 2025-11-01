@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
-import { CustomerFile } from "../../models";
-import { ERROR } from "../../shared/enums";
+import mongoose from 'mongoose';
+import { CustomerFile } from '../../schema';
+import { ERROR } from '../../shared/enums';
 
 export default async function addLiabilityDetails(fileId: string, data: any, loginUser: any) {
   const file = await CustomerFile.findOneAndUpdate(
@@ -10,7 +10,7 @@ export default async function addLiabilityDetails(fileId: string, data: any, log
     },
     {
       $push: {
-        "credit.liabilityDetails": data,
+        'credit.liabilityDetails': data,
       },
     },
     {

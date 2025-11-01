@@ -160,6 +160,8 @@ export default {
     createService: 'Create Service',
     createClient: 'Create Client',
     editClient: 'Edit Client',
+    manageBulkTasks: 'Manage Bulk Tasks',
+    addBulkTask: 'Add Bulk Task',
     // here we will place our translations...
   },
 };

@@ -1,12 +1,12 @@
-import { filesCommonSelectedData } from "../../main";
-import CustomerFileModel from "../../../../models/customerFile";
+import CustomerFileModel from '../../../../schema/customerFile';
+import { filesCommonSelectedData } from '../../main';
 
 const getCustomerDetails = async ({ id, loginUser }: { id: string; loginUser: any }) => {
   const customer = await CustomerFileModel.findOne({
     _id: id,
     organization: loginUser.organization._id,
   })
-    .populate("customerDetails")
+    .populate('customerDetails')
     .select({
       customerDetails: 1,
       fileBranch: 1,

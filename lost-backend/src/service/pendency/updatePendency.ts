@@ -1,6 +1,6 @@
-import { Types } from "mongoose";
-import { PendencySchema } from "../../models";
-import { ERROR } from "../../shared/enums";
+import { Types } from 'mongoose';
+import { PendencySchema } from '../../schema';
+import { ERROR } from '../../shared/enums';
 
 async function updatePendency({ body, loginUser }: { body: any; loginUser: any }) {
   const { _id, ...payload } = body;

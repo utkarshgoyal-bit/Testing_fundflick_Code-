@@ -1,7 +1,7 @@
-import { Types } from "mongoose";
-import { CustomerFile, PendencySchema } from "../../models";
-import { ERROR } from "../../shared/enums";
-import { TasksUpdateNotification } from "../../socket/sendNotification";
+import { Types } from 'mongoose';
+import { CustomerFile, PendencySchema } from '../../schema';
+import { ERROR } from '../../shared/enums';
+import { TasksUpdateNotification } from '../../socket/sendNotification';
 
 async function createPendency({ body, loginUser }: { body: any; loginUser: any }) {
   const file = await CustomerFile.findOne({
@@ -12,21 +12,24 @@ async function createPendency({ body, loginUser }: { body: any; loginUser: any }
     throw ERROR.USER_NOT_FOUND;
   }
 
-  file?.status !== "Approved" &&
-    (await CustomerFile.updateOne({ loanApplicationNumber: body.fileId }, { $set: { status: "Task Pending" } }));
+  file?.status !== 'Approved' &&
+    (await CustomerFile.updateOne(
+      { loanApplicationNumber: body.fileId },
+      { $set: { status: 'Task Pending' } }
+    ));
   const pendencyData = await PendencySchema.create({
     ...body,
     createdBy: new Types.ObjectId(loginUser.employeeId),
     createdAt: Date.now(),
     updatedBy: new Types.ObjectId(loginUser.employeeId),
-    status: "Pending",
+    status: 'Pending',
     organization: loginUser.organization._id,
   });
 
   await TasksUpdateNotification({
     message: {
-      message: "Pendency",
-      title: "Pendency",
+      message: 'Pendency',
+      title: 'Pendency',
     },
     users: [file?.createdBy],
     loanApplicationNumber: body.fileId,

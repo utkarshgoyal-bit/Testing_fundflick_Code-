@@ -1,4 +1,4 @@
-import { STEPS_NAMES } from '@/lib/enums';
+import { REPEAT_STATUS, STEPS_NAMES } from '@/lib/enums';
 const steps = [
   { name: STEPS_NAMES.CUSTOMER, label: STEPS_NAMES.CUSTOMER },
   { name: STEPS_NAMES.ADDRESS, label: STEPS_NAMES.ADDRESS },
@@ -62,5 +62,23 @@ const FILTER_BY_ASSIGN_OPTIONS = [
   { label: 'Assigned By Me', value: 'assignedByMe' },
   { label: 'CC', value: 'cc' },
 ];
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const REPEAT_OPTIONS = [REPEAT_STATUS.NO_REPEAT, REPEAT_STATUS.WEEKLY, REPEAT_STATUS.MONTHLY, REPEAT_STATUS.QUARTERLY, REPEAT_STATUS.YEARLY]
+const TASK_TYPES = ['payment', 'pendency', 'approvals', 'other'];
+const PAYMENT_TYPES = ['first', 'part', 'final'];
 
-export { steps, BEHAVIOUR, VISIT_TYPE_OPTIONS, TASK_STATUS_OPTIONS, FILTER_BY_ASSIGN_OPTIONS };
+export { steps, BEHAVIOUR, VISIT_TYPE_OPTIONS, TASK_STATUS_OPTIONS, FILTER_BY_ASSIGN_OPTIONS, MONTHS, WEEK_DAYS, REPEAT_OPTIONS, TASK_TYPES, PAYMENT_TYPES };

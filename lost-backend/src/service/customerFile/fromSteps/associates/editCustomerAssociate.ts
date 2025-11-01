@@ -1,11 +1,12 @@
-import { Types } from "mongoose";
-import { v4 as uuidv4 } from "uuid";
-import { uploadFileToS3 } from "../../../../aws/s3";
-import { EmployeeSchema } from "../../../../models";
-import customerFileSchema from "../../../../models/customerFile";
-import customerSchema from "../../../../models/customerFile/customers";
-import { ERROR } from "../../../../shared/enums";
-import CustomerFileStatusNotification from "../../../../socket/sendNotification";
+/* eslint-disable no-undef */
+import { Types } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+import { uploadFileToS3 } from '../../../../aws/s3';
+import { EmployeeSchema } from '../../../../schema';
+import customerFileSchema from '../../../../schema/customerFile';
+import customerSchema from '../../../../schema/customerFile/customers';
+import { ERROR } from '../../../../shared/enums';
+import CustomerFileStatusNotification from '../../../../socket/sendNotification';
 const editCustomerAssociate = async ({
   fileId,
   body,
@@ -26,17 +27,17 @@ const editCustomerAssociate = async ({
     for (const file of files as Express.Multer.File[]) {
       const fieldname = file.fieldname;
 
-      if (body.associate && fieldname === "associate[customerDetails][uidFront]") {
+      if (body.associate && fieldname === 'associate[customerDetails][uidFront]') {
         const uploadResult = await uploadFileToS3(
           file.path,
-          `${isCustomerFileExist.loanApplicationNumber}/${"associate-uidFront" + new Date()}`,
+          `${isCustomerFileExist.loanApplicationNumber}/${'associate-uidFront' + new Date()}`,
           file.mimetype
         );
         body.associate.customerDetails.uidFront = uploadResult;
-      } else if (body.associate && fieldname === "associate[customerDetails][uidBack]") {
+      } else if (body.associate && fieldname === 'associate[customerDetails][uidBack]') {
         const uploadResult = await uploadFileToS3(
           file.path,
-          `${isCustomerFileExist.loanApplicationNumber}/${"associate-uidBack" + new Date()}`,
+          `${isCustomerFileExist.loanApplicationNumber}/${'associate-uidBack' + new Date()}`,
           file.mimetype
         );
         body.associate.customerDetails.uidBack = uploadResult;
@@ -46,10 +47,10 @@ const editCustomerAssociate = async ({
           const subField = match[1];
           const uploadResult = await uploadFileToS3(
             file.path,
-            `${isCustomerFileExist.loanApplicationNumber}/${"associate-other" + new Date()}`,
+            `${isCustomerFileExist.loanApplicationNumber}/${'associate-other' + new Date()}`,
             file.mimetype
           );
-          const index = parseInt(fieldname.match(/\d+/)?.[0] ?? "0");
+          const index = parseInt(fieldname.match(/\d+/)?.[0] ?? '0');
           if (!photosPaths[index]) photosPaths[index] = {};
           photosPaths[index][subField] = uploadResult;
         }
@@ -90,15 +91,15 @@ const editCustomerAssociate = async ({
   const customerFile = await customerFileSchema.findOneAndUpdate(
     {
       _id: new Types.ObjectId(fileId),
-      "customerOtherFamilyDetails._id": new Types.ObjectId(body.associate_id),
+      'customerOtherFamilyDetails._id': new Types.ObjectId(body.associate_id),
       organization: loginUser.organization._id,
     },
     {
       $set: {
-        "customerOtherFamilyDetails.$.customerDetails": associateData.customerDetails,
-        "customerOtherFamilyDetails.$.customerType": associateData.customerType,
-        "customerOtherFamilyDetails.$.relation": associateData.relation,
-        "customerOtherFamilyDetails.$.address": associateData.address,
+        'customerOtherFamilyDetails.$.customerDetails': associateData.customerDetails,
+        'customerOtherFamilyDetails.$.customerType': associateData.customerType,
+        'customerOtherFamilyDetails.$.relation': associateData.relation,
+        'customerOtherFamilyDetails.$.address': associateData.address,
         updatedBy: new Types.ObjectId(loginUser.employeeId),
         updatedAt: new Date(),
       },
@@ -112,18 +113,20 @@ const editCustomerAssociate = async ({
   if (!customerFile) {
     throw ERROR.NOT_FOUND;
   }
-  const loginUserDetails = await EmployeeSchema.findOne({ _id: new Types.ObjectId(loginUser.employeeId) }).lean();
+  const loginUserDetails = await EmployeeSchema.findOne({
+    _id: new Types.ObjectId(loginUser.employeeId),
+  }).lean();
   if (!loginUserDetails) {
     throw ERROR.USER_NOT_FOUND;
   }
-  if (customerFile.status !== "Pending") {
+  if (customerFile.status !== 'Pending') {
     CustomerFileStatusNotification({
       loanApplicationNumber: customerFile.loanApplicationNumber,
       creator: customerFile.createdBy,
       customerFileId: customerFile._id,
       updater: loginUser,
       message: {
-        message: `${loginUserDetails.firstName + " " + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role}) has updated Associates details of the file`,
+        message: `${loginUserDetails.firstName + ' ' + loginUserDetails.lastName}(${loginUser.roleRef?.name || loginUser.role}) has updated Associates details of the file`,
         title: `File FI-${customerFile.loanApplicationNumber} Associates details is updated `,
       },
       organization: loginUser.organization._id,

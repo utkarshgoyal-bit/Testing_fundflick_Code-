@@ -1,6 +1,6 @@
-import { Types } from "mongoose";
-import TelephoneQuestionSchema from "../../models/telephoneQuestions";
-import { COMPONENTS, ERROR } from "../../shared/enums";
+import { Types } from 'mongoose';
+import TelephoneQuestionSchema from '../../schema/telephoneQuestions';
+import { COMPONENTS, ERROR } from '../../shared/enums';
 
 const addTelephoneQuestion = async ({ body, loginUser }: { body: any; loginUser: any }) => {
   const isExist = await TelephoneQuestionSchema.findOne({

@@ -1,43 +1,61 @@
-import { Types } from "mongoose";
-import BranchSchema from "../../models/branches";
+import { Types } from 'mongoose';
+import isSuperAdmin from '../../helper/booleanCheck/isSuperAdmin';
+import { LoginUser } from '../../interfaces';
+import BranchSchema from '../../schema/branches';
 
-const buildNestedTree = (rootId: string, branches: any[]) => {
-  const map = new Map<string, any>();
+type BranchNode = {
+  _id: Types.ObjectId;
+  name: string;
+  children: BranchNode[];
+};
 
-  // Initialize each branch with children array
-  branches.forEach((branch) => {
-    map.set(branch._id.toString(), { ...branch, children: [] });
+const buildNestedTree = (
+  rootId: string,
+  branches: { _id: Types.ObjectId; name: string; children: Types.ObjectId[] }[]
+): BranchNode | undefined => {
+  const map = new Map<string, BranchNode & { originalChildren?: Types.ObjectId[] }>();
+
+  branches.forEach(branch => {
+    map.set(branch._id.toString(), {
+      _id: branch._id,
+      name: branch.name,
+      children: [],
+      originalChildren: branch.children,
+    });
   });
 
-  // Connect children to their parent
-  branches.forEach((branch) => {
-    const parent = map.get(branch._id.toString());
-    if (branch.children?.length) {
-      branch.children.forEach((childId: Types.ObjectId) => {
+  map.forEach(parent => {
+    if (parent.originalChildren?.length) {
+      parent.originalChildren.forEach((childId: Types.ObjectId) => {
         const child = map.get(childId.toString());
         if (child && child._id.toString() !== parent._id.toString()) {
           parent.children.push(child);
         }
       });
     }
+    delete parent.originalChildren;
   });
 
   return map.get(rootId);
 };
 
-const getBranch = async (loginUser: any, isRoot: string) => {
-  const query: any = {
+const getBranch = async (loginUser: LoginUser, isRoot: string) => {
+  const query: { [key: string]: unknown } = {
     organization: loginUser.organization._id,
   };
 
-  if (isRoot === "true") {
+  if (isRoot === 'true') {
     query.isRoot = true;
   }
 
-  const dbQuery = {
+  const dbQuery: { [key: string]: unknown } = {
     ...query,
     $or: [{ IS_DELETED: false }, { IS_DELETED: { $exists: false } }],
   };
+
+  if (!isSuperAdmin([loginUser.role])) {
+    dbQuery.name = { $in: loginUser.branches };
+  }
 
   const branches = await BranchSchema.aggregate([
     {
@@ -45,11 +63,11 @@ const getBranch = async (loginUser: any, isRoot: string) => {
     },
     {
       $graphLookup: {
-        from: "branchesv2",
-        startWith: "$children",
-        connectFromField: "children",
-        connectToField: "_id",
-        as: "allChildren",
+        from: 'branchesv2',
+        startWith: '$children',
+        connectFromField: 'children',
+        connectToField: '_id',
+        as: 'allChildren',
         restrictSearchWithMatch: { IS_DELETED: false },
       },
     },
@@ -78,7 +96,7 @@ const getBranch = async (loginUser: any, isRoot: string) => {
 
   if (!branches.length) return [];
 
-  const trees = branches.map((root) => {
+  const trees = branches.map(root => {
     const { allChildren, ...rootData } = root;
     const allBranches = [rootData, ...allChildren];
     return buildNestedTree(root._id.toString(), allBranches);

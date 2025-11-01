@@ -1,0 +1,241 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  userId      String   @unique
+  email       String   @unique
+  name        String?
+  phoneNumber String?  @unique
+  address     String?
+  city        String?
+  state       String?
+  pinCode     String?
+  panNumber   String?  @unique
+  aadharNumber String? @unique
+  dateOfBirth DateTime?
+  occupation  String?
+  monthlyIncome Decimal? @db.Decimal(12, 2)
+  cibilScore  Int?
+  isActive    Boolean  @default(true)
+  userType    UserType @default(BORROWER)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String
+
+  // Relations
+  loans       Loan[]
+  payments    Payment[]
+
+  @@map("users")
+}
+
+model Loan {
+  id              Int        @id @unique
+  loanNumber      String     @unique
+  borrowerId      Int
+  principalAmount Decimal    @db.Decimal(15, 2)
+  roundedPrincipalAmount Int  
+  interestRate    Decimal    @db.Decimal(6, 4) // Annual interest rate in percentage
+  tenure          Int        // Loan tenure in months
+  emiAmount       Decimal    @db.Decimal(12, 2)
+  roundedEmiAmount Int
+  loanType        LoanType
+  loanStatus      LoanStatus @default(PENDING)
+  applicationDate DateTime   @default(now())
+  approvalDate    DateTime?
+  disbursementDate DateTime?
+  maturityDate    DateTime?
+  outstandingAmount Decimal? @db.Decimal(15, 2)
+  roundedOutstandingAmount Int? 
+  totalPaidAmount Decimal?   @db.Decimal(15, 2) @default(0)
+  roundedTotalPaidAmount Int?
+  processingFee   Decimal?   @db.Decimal(10, 2) @default(0)
+  roundedProcessingFee Int? 
+  penaltyAmount   Decimal?   @db.Decimal(10, 2) @default(0)
+  rounedPenaltyAmount Int?
+  purpose         String?
+  remarks         String?
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  orgName         String     
+  organization    String  
+  createdBy       String 
+
+  // Relations
+  borrower        User       @relation(fields: [borrowerId], references: [id])
+  emis            EMI[]
+  payments        Payment[]
+
+  @@map("loans")
+}
+
+model EMI {
+  id              Int       @id @default(autoincrement())
+  loanId          Int
+  emiNumber       Int       // Sequential EMI number (1, 2, 3...)
+  dueDate         DateTime
+  principalAmount Decimal   @db.Decimal(12, 2)
+  roundedPrincipalAmount Int? // Rounded principal amount
+  interestAmount  Decimal   @db.Decimal(12, 2)
+  roundedInterestAmount Int? // Rounded interest amount
+  totalAmount     Decimal   @db.Decimal(12, 2)
+  roundedTotalAmount Int? // Rounded total amount
+  paidAmount      Decimal?  @db.Decimal(12, 2) @default(0)
+  roundedPaidAmount Int?
+  balanceAmount   Decimal?  @db.Decimal(12, 2)
+  roundedBalanceAmount Int? // Rounded balance amount
+  penaltyAmount   Decimal?  @db.Decimal(10, 2) @default(0)
+  roundedPenaltyAmount Int?
+  outstandingPrincipal Decimal @db.Decimal(15, 2) // Remaining principal after this EMI
+  roundedOutstandingPrincipal Int? // Rounded outstanding principal
+  cumulativePrincipalPaid Decimal @db.Decimal(15, 2) // Total principal paid up to this EMI
+  roundedCumulativePrincipalPaid Int? // Rounded cumulative principal paid
+  cumulativeInterestPaid Decimal @db.Decimal(15, 2) // Total interest paid up to this EMI
+  roundedCumulativeInterestPaid Int? // Rounded cumulative interest paid
+  status          EMIStatus @default(PENDING)
+  paidDate        DateTime?
+  lateDays        Int?      @default(0)
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  loan            Loan      @relation(fields: [loanId], references: [id])
+  payments        Payment[]
+
+  @@unique([loanId, emiNumber])
+  @@map("emis")
+}
+
+model Payment {
+  id              Int           @id @default(autoincrement())
+  paymentNumber   String        @unique
+  loanId          Int
+  emiId           Int?          // Optional: can be partial payment or advance payment
+  borrowerId      Int
+  amount          Decimal       @db.Decimal(12, 2)
+  paymentMethod   PaymentMethod
+  paymentType     PaymentType   @default(EMI_PAYMENT)
+  transactionId   String?       // Bank transaction ID
+  paymentDate     DateTime      @default(now())
+  principalPaid   Decimal?      @db.Decimal(12, 2) @default(0)
+  interestPaid    Decimal?      @db.Decimal(12, 2) @default(0)
+  penaltyPaid     Decimal?      @db.Decimal(10, 2) @default(0)
+  processingFeePaid Decimal?    @db.Decimal(10, 2) @default(0)
+  excessAmount    Decimal?      @db.Decimal(12, 2) @default(0) // Excess payment for future EMIs
+  adjustedAmount  Decimal?      @db.Decimal(12, 2) @default(0) // Amount adjusted from previous excess
+  outstandingBeforePayment Decimal? @db.Decimal(15, 2) // Outstanding amount before this payment
+  outstandingAfterPayment  Decimal? @db.Decimal(15, 2) // Outstanding amount after this payment
+  allocatedEMIs   Json?         // JSON array of EMI allocations for bulk payments
+  reversalPaymentId Int?        // Reference to reversal payment if this payment was reversed
+  isReversal      Boolean       @default(false) // Whether this is a reversal payment
+  status          PaymentStatus @default(COMPLETED)
+  remarks         String?
+  receiptNumber   String?
+  bankName        String?
+  chequeNumber    String?
+  chequeDate      DateTime?
+  processedBy     Int?          // User ID who processed the payment
+  verifiedBy      Int?          // User ID who verified the payment
+  verifiedAt      DateTime?
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  loan            Loan          @relation(fields: [loanId], references: [id])
+  borrower        User          @relation(fields: [borrowerId], references: [id])
+  emi             EMI?          @relation(fields: [emiId], references: [id])
+  reversalPayment Payment?      @relation("PaymentReversal", fields: [reversalPaymentId], references: [id])
+  reversedPayments Payment[]    @relation("PaymentReversal")
+
+  @@map("payments")
+}
+
+// Enums
+enum UserType {
+  BORROWER
+  ADMIN
+  LOAN_OFFICER
+  MANAGER
+}
+
+enum LoanType {
+  PERSONAL_LOAN
+  HOME_LOAN
+  CAR_LOAN
+  BUSINESS_LOAN
+  EDUCATION_LOAN
+  GOLD_LOAN
+  VEHICLE_LOAN
+  OTHER
+}
+
+enum LoanStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  DISBURSED
+  ACTIVE
+  COMPLETED
+  DEFAULTED
+  CLOSED
+}
+
+enum EMIStatus {
+  PENDING
+  PAID
+  PARTIAL_PAID
+  OVERDUE
+  DEFAULTED
+}
+
+enum PaymentMethod {
+  CASH
+  CHEQUE
+  BANK_TRANSFER
+  UPI
+  NEFT
+  RTGS
+  ONLINE
+  AUTO_DEBIT
+}
+
+enum PaymentType {
+  EMI_PAYMENT
+  PRINCIPAL_PREPAYMENT
+  PROCESSING_FEE
+  PENALTY_PAYMENT
+  BULK_PAYMENT      // Payment covering multiple EMIs
+  ADVANCE_PAYMENT   // Payment for future EMIs
+  EXCESS_ADJUSTMENT // Adjustment of excess payment
+  REVERSAL          // Reversal of previous payment
+  CLOSURE_PAYMENT   // Final payment to close loan
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+  REVERSED
+  VERIFIED
+}

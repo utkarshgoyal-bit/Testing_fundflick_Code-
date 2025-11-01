@@ -1,9 +1,9 @@
-import jwt from "jsonwebtoken";
-import { User } from "../../interfaces/user.interface";
-import { Request } from "express";
+import jwt from 'jsonwebtoken';
+import { User } from '../../interfaces/user.interface';
+import { Request } from 'express';
 
 export const generateToken = async ({ user, email }: { user: User; email: string }) => {
-  const secret_key = process.env.JWT_SECRET || "";
+  const secret_key = process.env.JWT_SECRET || '';
   const { employeeId, role, branches, _id, organization } = user;
   const tokenPayload = {
     role,
@@ -14,11 +14,11 @@ export const generateToken = async ({ user, email }: { user: User; email: string
     organization,
   };
   return jwt.sign(tokenPayload, secret_key, {
-    expiresIn: "1d",
+    expiresIn: '9h',
   });
 };
 
 export const getToken = (req: Request): string => {
-  const token = req.headers?.authorization || "";
+  const token = req.headers?.authorization || '';
   return token;
 };

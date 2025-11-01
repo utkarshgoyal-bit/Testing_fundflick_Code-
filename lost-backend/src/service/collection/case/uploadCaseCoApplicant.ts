@@ -1,37 +1,40 @@
-import { z } from "zod";
-import { coApplicantsData } from "../../../../src/interfaces";
-import CollectionModel from "../../../models/collection/dataModel";
+import { z } from 'zod';
+import { coApplicantsData, LoginUser } from '../../../../src/interfaces';
+import CollectionModel from '../../../schema/collection/dataModel';
 
-const uploadCaseCoApplicant = async (newData: coApplicantsData, loginUser: any) => {
-
+const uploadCaseCoApplicant = async (newData: coApplicantsData, loginUser: LoginUser) => {
   const schema = z.array(
     z.object({
-      "Case No": z.string(),
+      'Case No': z.string(),
       Name: z.string(),
-      "Ownership Indicator": z.string(),
+      'Ownership Indicator': z.string(),
+      Latitude: z.string(),
+      Longitude: z.string(),
     })
   );
   try {
     newData = schema.parse(newData);
-  } catch (e) {
-    throw new Error("Invalid data format");
+  } catch {
+    throw new Error('Invalid data format');
   }
   const bulkOperation = [];
 
   const groupedByCaseNo = new Map();
   for (const row of newData) {
-    const caseNo = row["Case No"];
+    const caseNo = row['Case No'];
     if (!groupedByCaseNo.has(caseNo)) {
       groupedByCaseNo.set(caseNo, []);
     }
     groupedByCaseNo.get(caseNo).push({
-      name: row["Name"],
-      ownershipIndicator: Number(row["Ownership Indicator"]),
+      name: row['Name'],
+      ownershipIndicator: Number(row['Ownership Indicator']),
+      latitude: row['Latitude'],
+      longitude: row['Longitude'],
     });
   }
 
   if (groupedByCaseNo.size === 0) {
-    throw new Error("No data found in the file.");
+    throw new Error('No data found in the file.');
   }
 
   for (const [caseNo, applicants] of groupedByCaseNo.entries()) {

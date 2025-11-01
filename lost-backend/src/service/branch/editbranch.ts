@@ -1,6 +1,6 @@
-import { Types } from "mongoose";
-import { EditBranchReqType } from "../../controller/branches/validations";
-import BranchSchema from "../../models/branches";
+import { Types } from 'mongoose';
+import { EditBranchReqType } from '../../controller/branches/validations';
+import BranchSchema from '../../schema/branches';
 
 const editBranch = async (body: EditBranchReqType, loginUser: any) => {
   const updatedBranch = await BranchSchema.findOneAndUpdate(
@@ -13,12 +13,12 @@ const editBranch = async (body: EditBranchReqType, loginUser: any) => {
   );
 
   if (!updatedBranch) {
-    throw new Error("Branch not found");
+    throw new Error('Branch not found');
   }
   if (body.parentBranch) {
     const parentBranch = await BranchSchema.findOne({ _id: new Types.ObjectId(body.parentBranch) });
     if (parentBranch) {
-      let setOfBranches = new Set(parentBranch.children);
+      const setOfBranches = new Set(parentBranch.children);
       setOfBranches.add(updatedBranch._id);
       parentBranch.children = Array.from(setOfBranches);
       await parentBranch.save();

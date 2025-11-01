@@ -1,5 +1,5 @@
-import { Types } from "mongoose";
-import UserSchema from "../../models/auth";
+import { Types } from 'mongoose';
+import UserSchema from '../../schema/auth';
 const unblockUser = async ({ id, loginUser }: { id: string; loginUser: any }) => {
   const isUpdated = await UserSchema.findOneAndUpdate(
     { _id: new Types.ObjectId(id), organizations: loginUser.organization._id },
@@ -10,7 +10,7 @@ const unblockUser = async ({ id, loginUser }: { id: string; loginUser: any }) =>
     }
   );
   if (!isUpdated) {
-    throw "User not found";
+    throw 'User not found';
   }
   return isUpdated;
 };

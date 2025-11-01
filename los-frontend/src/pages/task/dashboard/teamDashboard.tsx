@@ -1,16 +1,28 @@
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { buildOrgRoute } from '@/helpers/routeHelper';
+import { ROUTES, TASK_STATUS } from '@/lib/enums';
 import { RootState } from '@/redux/slices';
+import { ArrowUpRight, User } from 'lucide-react';
 import { BsCalendar2CheckFill, BsPersonCheckFill } from 'react-icons/bs';
 import { GoTasklist } from 'react-icons/go';
 import { MdPending } from 'react-icons/md';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
-  Legend,
-  Line,
-  LineChart,
+  Label,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -18,30 +30,60 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-('use client');
 
-const statisticsData = [
-  { month: 'Jan', completed: 100, incomplete: 80 },
-  { month: 'Feb', completed: 120, incomplete: 90 },
-  { month: 'Mar', completed: 150, incomplete: 100 },
-  { month: 'Apr', completed: 180, incomplete: 120 },
-  { month: 'May', completed: 250, incomplete: 150 },
-  { month: 'Jun', completed: 270, incomplete: 200 },
-  { month: 'Jul', completed: 260, incomplete: 270 },
-  { month: 'Aug', completed: 100, incomplete: 50 },
-  { month: 'Sep', completed: 50, incomplete: 30 },
-  { month: 'Oct', completed: 20, incomplete: 10 },
-  { month: 'Nov', completed: 10, incomplete: 5 },
-  { month: 'Dec', completed: 5, incomplete: 2 },
-];
+function calculateUserEfficiency(
+  tasks: {
+    users: { employeeId: string; name: string }[];
+    status: keyof typeof TASK_STATUS;
+    acceptedBy: string;
+  }[]
+) {
+  const userStats: {
+    [key: string]: {
+      name: string;
+      incomplete: number;
+      completed: number;
+      total: number;
+      efficiency: number;
+    };
+  } = {};
 
-const teamIncompleteTasks = [
-  { name: 'Anjali Popat', incomplete: 2, completed: 3, total: 5, short: 'AP', color: 'bg-orange-500' },
-  { name: 'Diksha Chitroda', incomplete: 263, completed: 3, total: 5, short: 'DC', color: 'bg-yellow-500' },
-];
+  for (const task of tasks) {
+    const acceptedUser = task.users.find((u) => u.employeeId === task.acceptedBy);
+    if (!acceptedUser) continue;
 
-function TeamDashboard() {
+    const userId = acceptedUser.employeeId;
+
+    if (!userStats[userId]) {
+      userStats[userId] = {
+        name: acceptedUser.name,
+        incomplete: 0,
+        completed: 0,
+        total: 0,
+        efficiency: 0,
+      };
+    }
+
+    if (task.status === TASK_STATUS.COMPLETED) {
+      userStats[userId].completed += 1;
+    } else {
+      userStats[userId].incomplete += 1;
+    }
+
+    userStats[userId].total = userStats[userId].completed + userStats[userId].incomplete;
+    userStats[userId].efficiency = Number(((userStats[userId].completed / userStats[userId].total) * 100).toFixed(2));
+  }
+
+  return Object.values(userStats);
+}
+
+function TeamDashboard({
+  setIncompleteTasksFilter,
+}: {
+  setIncompleteTasksFilter: (filter: 'pending' | 'inProgress') => void;
+}) {
   const { data } = useSelector((state: RootState) => state.taskDashboard);
+
   const {
     assignedToMeTasks,
     dueTodayTasks,
@@ -50,73 +92,131 @@ function TeamDashboard() {
     statusWiseTasks,
     totalTasks,
   } = data;
+  const navigate = useNavigate();
 
-  const priorityTaskSummaryData = [
-    { name: 'Low', value: priorityWiseIncompleteTasks.low, color: '#10B981' },
-    { name: 'Medium', value: priorityWiseIncompleteTasks.medium, color: '#FBBF24' },
-    { name: 'High', value: priorityWiseIncompleteTasks.high, color: '#EF4444' },
-  ];
   const performanceData = [
-    { name: 'On Track', value: statusWiseTasks.inProgress, color: '#10B981' },
-    { name: 'Before Time', value: statusWiseTasks.scheduled, color: '#FBBF24' },
-    { name: 'Delayed', value: statusWiseTasks.overdue, color: '#EF4444' },
+    { name: 'Pending', value: statusWiseTasks.pending, fill: '#F7DC6F' },
+    { name: 'In Progress', value: statusWiseTasks.inProgress, fill: '#10B981' },
+    { name: 'Overdue', value: statusWiseTasks.overdue, fill: '#EF4444' },
   ];
 
-  const totalPendingTasks =
-    priorityWiseIncompleteTasks.low + priorityWiseIncompleteTasks.medium + priorityWiseIncompleteTasks.high;
-
+  const completedTasksChartConfig = {
+    beforeTime: {
+      label: 'Before time',
+      color: 'var(--color-warning)',
+    },
+    onTime: {
+      label: 'On time',
+      color: 'var(--chart-1)',
+    },
+    delayed: {
+      label: 'Delayed',
+      color: 'var(--color-error)',
+    },
+  } satisfies ChartConfig;
+  const completedTasksChartData = [
+    { month: 'January', beforeTime: 186, onTime: 80, delayed: 50 },
+    { month: 'February', beforeTime: 305, onTime: 200, delayed: 150 },
+    { month: 'March', beforeTime: 237, onTime: 120, delayed: 250 },
+    { month: 'April', beforeTime: 73, onTime: 190, delayed: 90 },
+    { month: 'May', beforeTime: 209, onTime: 130, delayed: 10 },
+    { month: 'June', beforeTime: 214, onTime: 140, delayed: 110 },
+  ];
   const overallSummaryData = [
     {
       title: 'Total Task',
       count: totalTasks,
-      bgColor: 'bg-teal-500',
-      iconColor: 'text-white',
-      iconBg: 'bg-teal-600',
-      iconPath: 'M9 12h6m-3-3v6',
-      icon: <GoTasklist className="w-4 h-4 text-white" />,
+      color: 'bg-teal-500',
+      icon: <GoTasklist className="w-4 h-4 text-text" />,
+      onClick: () => navigate(buildOrgRoute(`${ROUTES.TASK_MANAGEMENT}`)),
     },
     {
       title: 'Assigned to me',
       count: assignedToMeTasks,
-      bgColor: 'bg-red-500',
-      iconColor: 'text-white',
-      iconBg: 'bg-red-600',
-      iconPath: 'M12 4v16m8-8H4',
-      icon: <BsPersonCheckFill className="w-4 h-4 text-white" />,
+      color: 'bg-red-500',
+      icon: <BsPersonCheckFill className="w-4 h-4 text-text" />,
     },
     {
       title: 'Due today',
       count: dueTodayTasks,
-      bgColor: 'bg-purple-500',
-      iconColor: 'text-white',
-      iconBg: 'bg-purple-600',
-      iconPath: 'M5 13l4 4L19 7',
-      icon: <BsCalendar2CheckFill className="w-4 h-4 text-white" />,
+      color: 'bg-purple-500',
+      icon: <BsCalendar2CheckFill className="w-4 h-4 text-text" />,
     },
     {
       title: 'Incomplete Tasks',
       count: incompleteTasks,
-      bgColor: 'bg-orange-500',
-      iconColor: 'text-white',
-      iconBg: 'bg-orange-600',
-      iconPath: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z',
-      icon: <MdPending className="w-4 h-4 text-white" />,
+      color: 'bg-orange-500',
+      icon: <MdPending className="w-4 h-4 text-text" />,
     },
   ];
-
+  const UserEfficiency = calculateUserEfficiency(data.teamTasks || []);
+  const incompleteTaskData = [
+    { priority: 'low', value: priorityWiseIncompleteTasks.low, fill: 'var(--color-warning)' },
+    { priority: 'medium', value: priorityWiseIncompleteTasks.medium, fill: 'var(--color-recurring)' },
+    { priority: 'high', value: priorityWiseIncompleteTasks.high, fill: 'var(--color-error)' },
+  ];
+  const incompleteTaskAnalysisChartConfig = {
+    low: {
+      label: 'Low',
+      color: 'var(--color-warning)',
+    },
+    medium: {
+      label: 'Medium',
+      color: 'var(--color-warning)',
+    },
+    high: {
+      label: 'High',
+      color: 'hsl(var(--color-error))',
+    },
+  } satisfies ChartConfig;
   return (
-    <div className="p-6  rounded-md shadow-md space-y-6  bg-gray">
+    <div className="p-6  rounded-md shadow-md space-y-6  bg-white">
       <div className="grid grid-cols-10 gap-4">
         <div className="col-span-12">
           {/* Overall Summary */}
-          <div className="grid grid-cols-2 gap-4 mt-2 ">
-            {overallSummaryData.map(({ title, count, iconColor, iconBg, icon }) => (
-              <div key={title} className={`rounded-md p-4 flex flex-row justify-between  items-center bg-white shadow`}>
-                <div className="flex flex-row gap-2">
-                  <span className={`${iconColor} ${iconBg}  rounded-full p-3 `}>{icon}</span>
-                  <p className="text-lg font-semibold mt-1">{title}</p>
+          <div className="grid grid-cols-4 gap-4 mt-2 ">
+            {overallSummaryData.map((card, index) => (
+              <div
+                key={index}
+                className={`group relative bg-gradient-to-br from-color-surface via-color-surface to-color-surface-muted border border-fg-border rounded-lg p-4 hover:shadow-lg transition-all duration-300 overflow-hidden ${'cursor-pointer hover:border-color-primary/30'}`}
+                onClick={card.onClick}
+              >
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-3">
+                  <div
+                    className={`absolute top-0 right-0 w-16 h-16 ${card.color} rounded-full -translate-y-8 translate-x-8`}
+                  ></div>
+                  <div
+                    className={`absolute bottom-0 left-0 w-12 h-12 bg-color-secondary rounded-full translate-y-6 -translate-x-6`}
+                  ></div>
                 </div>
-                <p className="text-2xl font-bold">{count}</p>
+
+                {/* Subtle Grid Pattern */}
+                <div
+                  className="absolute inset-0 opacity-[0.015]"
+                  style={{
+                    backgroundImage: `radial-gradient(circle at 1px 1px, var(--fg-primary) 1px, transparent 0)`,
+                    backgroundSize: '12px 12px',
+                  }}
+                ></div>
+
+                {/* Gradient Overlay */}
+                <div
+                  className={`absolute inset-0 bg-gradient-to-r ${'from-color-primary/3 via-transparent to-color-secondary/3'}`}
+                ></div>
+
+                {/* Card Header */}
+                <div className="flex items-center justify-between mb-3 relative z-10">
+                  <div className={`p-2 rounded-lg border `}>{card.icon}</div>
+
+                  <ArrowUpRight className="h-3 w-3 text-fg-tertiary opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+
+                {/* Card Content */}
+                <div className="relative z-10">
+                  <div className="text-xl font-bold text-fg-primary mb-1 leading-tight">{card.count}</div>
+                  <div className="flex items-center justify-between text-xs">{card.title}</div>
+                </div>
               </div>
             ))}
           </div>
@@ -136,18 +236,20 @@ function TeamDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {teamIncompleteTasks.map(({ name, incomplete, short, color, completed, total }) => (
+                  {UserEfficiency?.map(({ name, incomplete, completed, total, efficiency }) => (
                     <tr key={name}>
                       <td className="border-b p-2  ">
                         <span className="flex items-center gap-2">
-                          <span className={`p-2 text-sm  ${color} rounded-full text-white`}>{short}</span>
+                          <span className={`p-2 text-sm bg-orange-500 rounded-full text-white`}>
+                            <User />
+                          </span>
                           {name}
                         </span>
                       </td>
                       <td className="border-b p-2">{incomplete}</td>
                       <td className="border-b p-2">{completed}</td>
                       <td className="border-b p-2">{total}</td>
-                      <td className="border-b p-2">{}</td>
+                      <td className="border-b p-2">{efficiency}%</td>
                     </tr>
                   ))}
                 </tbody>
@@ -155,24 +257,24 @@ function TeamDashboard() {
             </div>
           </div>
 
-          <div className="flex flex-row mt-5 gap-4 ">
-            <div className="bg-white rounded-md shadow p-4">
+          <div className="flex w-full mt-5 gap-4 ">
+            <div className="bg-white w-1/2 rounded-md shadow p-4">
               <div className="flex flex-row justify-between items-center mb-10 mt-2  ">
-                <h1 className="font-bold text-2xl w-1/3 ">Performance Analysis</h1>
+                <h1 className="font-bold  w-1/2 ">Task Status (Assigned by me)</h1>
                 <div className="flex items-center space-x-2 mb-4">
-                  <span className="flex items-center space-x-3  text-green-600">
-                    <div className="w-3 h-3 rounded bg-green-600"></div>
-                    <span>On Track</span>
-                    <span className="ml-1">{statusWiseTasks.inProgress}</span>
-                  </span>
                   <span className="flex items-center space-x-1 text-yellow-500">
                     <div className="w-3 h-3 rounded bg-yellow-500"></div>
                     <span>Pending</span>
                     <span className="ml-1">{statusWiseTasks.pending}</span>
                   </span>
+                  <span className="flex items-center space-x-3  text-green-600">
+                    <div className="w-3 h-3 rounded bg-green-600"></div>
+                    <span>In Progress</span>
+                    <span className="ml-1">{statusWiseTasks.inProgress}</span>
+                  </span>
                   <span className="flex items-center space-x-1 text-red-600">
                     <div className="w-3 h-3 rounded bg-red-600"></div>
-                    <span>Delayed</span>
+                    <span>Overdue</span>
                     <span className="ml-1">{statusWiseTasks.overdue}</span>
                   </span>
                 </div>
@@ -189,85 +291,181 @@ function TeamDashboard() {
                   />
                   <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} width={80} />
                   <Tooltip />
-                  <Bar dataKey="value" fill="#10B981" />
+                  <Bar dataKey="value" fill="#000" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
 
             {/* Priority Task Summary */}
-            <div className="bg-white rounded-md shadow p-4 flex flex-1">
-              {/* Left Column - Text Content */}
-              <div className="w-1/2 flex flex-col justify-center">
-                <h3 className="font-semibold mb-4">Priority Task Summary</h3>
-
-                {/* Show each priority with its value and color */}
-                <div className="space-y-2">
-                  {priorityTaskSummaryData.map((entry) => (
-                    <div key={entry.name} className="flex items-center space-x-2">
-                      <span className="inline-block w-3 h-3 rounded" style={{ backgroundColor: entry.color }}></span>
-                      <span className="text-sm font-medium">
-                        {entry.name}: {entry.value}
-                      </span>
+            <div className=" w-1/2 gap-6">
+              <div className="bg-white rounded-md shadow p-4">
+                <h3 className="font-semibold mb-4 ">Incomplete Task Analysis</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <div className="flex justify-between px-4">
+                    <Tabs defaultValue="pending" className="w-[400px]">
+                      <TabsList>
+                        <TabsTrigger onClick={() => setIncompleteTasksFilter('pending')} value="pending">
+                          Pending
+                        </TabsTrigger>
+                        <TabsTrigger onClick={() => setIncompleteTasksFilter('inProgress')} value="inProgress">
+                          In Progress
+                        </TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="pending">
+                        <ChartContainer
+                          config={incompleteTaskAnalysisChartConfig}
+                          className="mx-auto aspect-square max-h-[250px]"
+                        >
+                          <PieChart>
+                            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                            <Pie
+                              data={incompleteTaskData}
+                              dataKey="value"
+                              nameKey="priority"
+                              innerRadius={60}
+                              strokeWidth={5}
+                            >
+                              <Label
+                                content={({ viewBox }) => {
+                                  if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
+                                    return (
+                                      <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
+                                        <tspan
+                                          x={viewBox.cx}
+                                          y={viewBox.cy}
+                                          className="fill-foreground text-3xl font-bold"
+                                        >
+                                          {Object.values(incompleteTaskData)
+                                            .reduce((acc, item) => acc + item.value, 0)
+                                            .toLocaleString()}
+                                        </tspan>
+                                        <tspan
+                                          x={viewBox.cx}
+                                          y={(viewBox.cy || 0) + 24}
+                                          className="fill-muted-foreground"
+                                        >
+                                          Visitors
+                                        </tspan>
+                                      </text>
+                                    );
+                                  }
+                                }}
+                              />
+                            </Pie>
+                          </PieChart>
+                        </ChartContainer>
+                      </TabsContent>
+                      <TabsContent value="inProgress">
+                        <ChartContainer
+                          config={incompleteTaskAnalysisChartConfig}
+                          className="mx-auto aspect-square max-h-[250px]"
+                        >
+                          <PieChart>
+                            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                            <Pie
+                              data={incompleteTaskData}
+                              dataKey="value"
+                              nameKey="priority"
+                              innerRadius={60}
+                              strokeWidth={5}
+                            >
+                              <Label
+                                content={({ viewBox }) => {
+                                  if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
+                                    return (
+                                      <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
+                                        <tspan
+                                          x={viewBox.cx}
+                                          y={viewBox.cy}
+                                          className="fill-foreground text-3xl font-bold"
+                                        >
+                                          {Object.values(incompleteTaskData)
+                                            .reduce((acc, item) => acc + item.value, 0)
+                                            .toLocaleString()}
+                                        </tspan>
+                                        <tspan
+                                          x={viewBox.cx}
+                                          y={(viewBox.cy || 0) + 24}
+                                          className="fill-muted-foreground"
+                                        >
+                                          Visitors
+                                        </tspan>
+                                      </text>
+                                    );
+                                  }
+                                }}
+                              />
+                            </Pie>
+                          </PieChart>
+                        </ChartContainer>
+                      </TabsContent>
+                    </Tabs>
+                    <div>
+                      <div className=" mt-4 ">
+                        {incompleteTaskData.map((entry) => (
+                          <div key={entry.priority} className="flex items-center space-x-2">
+                            <div className="w-3 h-3 rounded" style={{ backgroundColor: entry.fill }}></div>
+                            <span className="text-lg capitalize">{entry.priority}</span>
+                            <span className="text-lg font-medium">{entry.value}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
-                </div>
-
-                {/* Total count (previously shown at bottom) */}
-                <div className="mt-4 text-xl font-bold">Total: {totalPendingTasks}</div>
-              </div>
-
-              {/* Right Column - Pie Chart */}
-              <div className="w-1/2 flex justify-center items-center">
-                <PieChart width={250} height={250}>
-                  <Pie
-                    data={priorityTaskSummaryData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label
-                  >
-                    {priorityTaskSummaryData.map((entry) => (
-                      <Cell key={entry.name} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Legend verticalAlign="bottom" height={36} />
-                </PieChart>
+                  </div>
+                </ResponsiveContainer>
               </div>
             </div>
           </div>
-          <div className="flex gap-4 mt-4">
-            {/* Statistics Chart */}
-            <div className="flex-1 bg-white rounded-md shadow p-4 border">
-              <div className="flex space-x-4 justify-between mt-2 text-sm text-gray-600">
-                <h3 className="font-semibold mb-4">Statistics</h3>
-                <div className="flex flex-row gap-3">
-                  <div className="flex items-center space-x-1">
-                    <div className="w-3 h-3 rounded bg-green-500"></div>
-                    <span>Completed</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <div className="w-3 h-3 rounded bg-red-500"></div>
-                    <span>Incomplete</span>
-                  </div>
-                  <button className="ml-auto border border-gray-300 rounded px-2 py-1 text-xs">Monthly</button>
-                  <button className="border border-gray-300 rounded px-2 py-1 text-xs">Weekly</button>
-                  <button className="border border-gray-300 rounded px-2 py-1 text-xs">My Task</button>
-                </div>
-              </div>
+          <div className="bg-white my-2 rounded-md  p-4 shadow-md ">
+            <h3 className="font-semibold mb-4 text-2xl">Completed Task Analysis</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <ChartContainer config={completedTasksChartConfig} className="mx-auto max-h-[300px]">
+                <AreaChart
+                  accessibilityLayer
+                  data={completedTasksChartData}
+                  margin={{
+                    left: 12,
+                    right: 12,
+                  }}
+                >
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tickFormatter={(value) => value.slice(0, 3)}
+                  />
+                  <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+                  <Area
+                    dataKey="beforeTime"
+                    type="natural"
+                    fill="var(--color-beforeTime)"
+                    fillOpacity={0.4}
+                    stroke="var(--color-beforeTime)"
+                    stackId="a"
+                  />
 
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={statisticsData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="completed" stroke="#10B981" strokeWidth={3} />
-                  <Line type="monotone" dataKey="incomplete" stroke="#EF4444" strokeWidth={3} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+                  <Area
+                    dataKey="onTime"
+                    type="natural"
+                    fill="var(--color-onTime)"
+                    fillOpacity={0.4}
+                    stroke="var(--color-onTime)"
+                    stackId="a"
+                  />
+                  <Area
+                    dataKey="delayed"
+                    type="natural"
+                    fill="var(--color-delayed)"
+                    fillOpacity={0.4}
+                    stroke="var(--color-delayed)"
+                    stackId="a"
+                  />
+                  <ChartLegend content={<ChartLegendContent />} />
+                </AreaChart>
+              </ChartContainer>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>

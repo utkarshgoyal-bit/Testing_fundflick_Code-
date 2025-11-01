@@ -1,13 +1,16 @@
-import { Request, Response } from "express";
-import { ApiResponseHandler, StatusCodes } from "../../../helper/responseHelper";
-import { FileOperationServices } from "../../../service";
-import { ERROR, SUCCESS } from "../../../shared/enums";
+import { Request, Response } from 'express';
+import { ApiResponseHandler } from '../../../helper/responseHelper';
+import { FileOperationServices } from '../../../service';
+import { ERROR, SUCCESS, StatusCodes } from '../../../shared/enums';
 class FileOperationsController {
   async getVehicleRecords(req: Request, res: Response) {
     try {
       const { chassisNumber } = req.query;
-      const response = await FileOperationServices.getVehicleDetails(chassisNumber as string, req.loginUser);
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Vehicle " + SUCCESS.CREATED);
+      const response = await FileOperationServices.getVehicleDetails(
+        chassisNumber as string,
+        req.loginUser
+      );
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Vehicle ' + SUCCESS.CREATED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -15,8 +18,11 @@ class FileOperationsController {
   async getCustomerInformation(req: Request, res: Response) {
     try {
       const { aadhaarNumber } = req.query;
-      const response = await FileOperationServices.getCustomerRecord(aadhaarNumber as string, req.loginUser);
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "customer " + SUCCESS.CREATED);
+      const response = await FileOperationServices.getCustomerRecord(
+        aadhaarNumber as string,
+        req.loginUser
+      );
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'customer ' + SUCCESS.CREATED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -25,7 +31,7 @@ class FileOperationsController {
     try {
       const { loanApplicationNumber, status, data } = req.body;
       if (!loanApplicationNumber || !status) {
-        throw "Please provide loanApplicationNumber and status";
+        throw 'Please provide loanApplicationNumber and status';
       }
       const response = await FileOperationServices.updateCustomerFileStatus({
         loanApplicationNumber: loanApplicationNumber as string,
@@ -33,7 +39,7 @@ class FileOperationsController {
         loginUser: req.loginUser,
         data,
       });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "customer " + SUCCESS.CREATED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'customer ' + SUCCESS.CREATED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -46,7 +52,7 @@ class FileOperationsController {
         comments,
         loginUser: req.loginUser,
       });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "customer " + SUCCESS.CREATED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'customer ' + SUCCESS.CREATED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -57,7 +63,7 @@ class FileOperationsController {
         data: req.body,
         loginUser: req.loginUser,
       });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Payment " + SUCCESS.CREATED);
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Payment ' + SUCCESS.CREATED);
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -65,13 +71,13 @@ class FileOperationsController {
   async fileHandlers(req: Request, res: Response) {
     const { fileId } = req.query;
     if (!fileId) {
-      throw "Please provide loanApplicationNumber ";
+      throw 'Please provide loanApplicationNumber ';
     }
     const response = await FileOperationServices.fileHandlersService({
       fileId: fileId as string,
       loginUser: req.loginUser,
     });
-    ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Success");
+    ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Success');
   }
   async fileVerification(req: Request, res: Response) {
     try {
@@ -82,7 +88,7 @@ class FileOperationsController {
         step,
         isVerified,
       });
-      return ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Success");
+      return ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Success');
     } catch (error) {
       return ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -96,7 +102,7 @@ class FileOperationsController {
         review,
         description,
       });
-      return ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Success");
+      return ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Success');
     } catch (error) {
       return ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }
@@ -105,7 +111,7 @@ class FileOperationsController {
     try {
       const { body, params, files, loginUser } = req;
       if (!params.id) {
-        throw "Please provide file id ";
+        throw 'Please provide file id ';
       }
       const response = await FileOperationServices.updateCustomerCibilScore({
         body,
@@ -113,7 +119,7 @@ class FileOperationsController {
         fileId: params.id,
         loginUser,
       });
-      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, "Success ");
+      ApiResponseHandler.sendResponse(res, StatusCodes.OK, response, 'Success ');
     } catch (error) {
       ApiResponseHandler.sendErrorResponse(res, error, ERROR.BAD_REQUEST);
     }

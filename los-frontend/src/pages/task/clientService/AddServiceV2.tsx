@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import I8nTextWrapper from '@/translations/i8nTextWrapper';
 import { Plus } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ADD_SERVICE, EDIT_SERVICE, FETCH_SERVICE_BY_ID } from '@/redux/actions/types';
 import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
@@ -23,8 +22,6 @@ import { useEffect } from 'react';
 import { RootState } from '@/redux/slices';
 import { AddServiceV2Props, IServiceFormValues } from '@/lib/interfaces/service.interface';
 
-
-
 const AddServiceV2 = ({ open, onOpenChange, editService, showTrigger = true }: AddServiceV2Props) => {
   const navigation = useNavigate();
   const dispatch = useDispatch();
@@ -32,13 +29,13 @@ const AddServiceV2 = ({ open, onOpenChange, editService, showTrigger = true }: A
   const serviceId = searchParams.get('id') || '';
   const { selectedService } = useSelector((state: RootState) => state.service);
   const form = useForm<IServiceFormValues>({
-    defaultValues: editService || selectedService || {
-      serviceName: '',
-      departmentId: '',
-      description: '',
-      frequency: '',
-      startDate: '',
-    },
+    defaultValues: editService ||
+      selectedService || {
+        serviceName: '',
+        departmentId: '',
+        description: '',
+        startDate: '',
+      },
   });
 
   const onSubmit = (values: IServiceFormValues) => {
@@ -75,9 +72,11 @@ const AddServiceV2 = ({ open, onOpenChange, editService, showTrigger = true }: A
       <SheetContent className="w-[1000px] sm:w-[540px] overflow-y-auto max-h-[100vh]">
         <SheetHeader>
           <SheetTitle>{editService ? 'Edit Service' : 'Add Service'}</SheetTitle>
-          <SheetDescription>{editService ? 'Edit the service details.' : 'Add a new service to the system.'}</SheetDescription>
+          <SheetDescription>
+            {editService ? 'Edit the service details.' : 'Add a new service to the system.'}
+          </SheetDescription>
         </SheetHeader>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
@@ -105,34 +104,6 @@ const AddServiceV2 = ({ open, onOpenChange, editService, showTrigger = true }: A
                 </FormItem>
               )}
             />
-          
-
-            {
-              <>
-                <FormField
-                  control={form.control}
-                  name="frequency"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Frequency</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select frequency" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                          <SelectItem value="quarterly">Quarterly</SelectItem>
-                          <SelectItem value="yearly">Yearly</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-               
-              </>
-            }
 
             <SheetFooter>
               <Button type="submit">Save changes</Button>

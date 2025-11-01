@@ -13,11 +13,17 @@ import DashboardService from './dashboard';
 import EmployeesServices from './employee';
 import PendencyServices from './pendency';
 import TasksService from './tasks';
+import ClientService from './tasks/client';
+import ClientLedgerService from './tasks/client/clientLedger';
+import DepartmentService from './tasks/department';
+import ServiceService from './tasks/service';
 import TelephoneQuestionService from './teleVerification';
 import UsersServices from './users';
 
 export {
   AuthServices,
+  ClientLedgerService,
+  ClientService,
   CustomerAddressService,
   CustomerAssociatesServices,
   CustomerBankService,
@@ -27,10 +33,12 @@ export {
   CustomerLiabilityService,
   CustomerPhotosService,
   DashboardService,
+  DepartmentService,
   EmployeesServices,
   FileControllers,
   FileOperationServices,
   PendencyServices,
+  ServiceService,
   TasksService,
   TelephoneQuestionService,
   UsersServices,

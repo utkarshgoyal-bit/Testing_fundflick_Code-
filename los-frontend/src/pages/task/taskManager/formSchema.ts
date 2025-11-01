@@ -15,15 +15,13 @@ export const FormSchema = z
     caseNo: z.string().optional(),
     serviceId: z.string().optional(),
     returnName: z.string().optional(),
-
+    clientId: z.string().optional(),
     title: z.string().optional(),
     paymentType: z.enum(['first', 'part', 'final']).optional(),
     amount: z.string().transform(Number).optional(),
     description: z.string().optional(),
     approvalBased: z.boolean().default(false),
-    users: z
-      .array(z.object({ name: z.string(), employeeId: z.string() }))
-      .min(1, { message: 'User name is required' }),
+    users: z.array(z.object({ name: z.string(), employeeId: z.string() })).min(1, { message: 'User name is required' }),
     cc: z.array(z.object({ name: z.string(), employeeId: z.string() })).optional(),
     repeat: z
       .enum([

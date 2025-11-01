@@ -1,12 +1,12 @@
-import FollowUpData from "../../../models/collection/followUpData";
+import FollowUpData from '../../../schema/collection/followUpData';
 const getAllFollowUps = async (loginUser: any) => {
   try {
     return await FollowUpData.find({ organization: loginUser.organization._id })
-      .populate(["refCaseId", "createdBy"])
+      .populate(['refCaseId', 'createdBy'])
       .sort({ createdAt: -1 });
   } catch (error) {
-    console.error("Error in fetchAllFollowUps:", error);
-    throw new Error("An error occurred while fetching follow-up data.");
+    console.error('Error in fetchAllFollowUps:', error);
+    throw new Error('An error occurred while fetching follow-up data.');
   }
 };
 

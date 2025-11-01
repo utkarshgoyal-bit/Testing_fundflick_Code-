@@ -1,7 +1,10 @@
-import vehicleSchemaModel from "../../../models/customerFile/vehicle";
+import vehicleSchemaModel from '../../../schema/customerFile/vehicle';
 
 const getVehicleDetails = async (chassisNumber: string, loginUser: any) => {
-  const vehicleRecords = await vehicleSchemaModel.findOne({ chassisNumber, organization: loginUser.organization._id });
+  const vehicleRecords = await vehicleSchemaModel.findOne({
+    chassisNumber,
+    organization: loginUser.organization._id,
+  });
   return vehicleRecords;
 };
 export default getVehicleDetails;

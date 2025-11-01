@@ -66,9 +66,7 @@ function ClientDetailsDialog({ client, onOpenChange }: { client: IClientTable | 
                     {s.subCategories.length > 0 && (
                       <ul className="list-disc list-inside ml-4 text-fg-secondary">
                         {s.subCategories.map((sub) => (
-                          <li key={sub._id}>
-                            {sub.returnName} ({sub.frequency})
-                          </li>
+                          <li key={sub._id}>{sub.returnName}</li>
                         ))}
                       </ul>
                     )}

@@ -1,14 +1,31 @@
-import { PipelineStage, Types } from "mongoose";
-import { isTrue } from "../../../helper";
-import CollectionModel from "../../../models/collection/dataModel";
-import checkPermission from "../../../lib/permissions/checkPermission";
-import { PERMISSIONS } from "../../../shared/enums/permissions";
-import isSuperAdmin from "../../../helper/booleanCheck/isSuperAdmin";
-const getCases = async ({ loginUser, query: queryData }: { loginUser: any; query: { [key: string]: any } }) => {
+import mongoose, { PipelineStage, Types } from 'mongoose';
+import { isTrue } from '../../../helper';
+import isSuperAdmin from '../../../helper/booleanCheck/isSuperAdmin';
+import { LoginUser } from '../../../interfaces';
+import {
+  CollectionFilters,
+  GetCollectionCaseQuery,
+} from '../../../interfaces/collection.interface';
+import checkPermission from '../../../lib/permissions/checkPermission';
+import CollectionModel, { ICollectionData } from '../../../schema/collection/dataModel';
+import { PERMISSIONS } from '../../../shared/enums/permissions';
+
+const getCases = async ({
+  loginUser,
+  query: queryData,
+}: {
+  loginUser: LoginUser;
+  query: GetCollectionCaseQuery;
+}) => {
   try {
-    let { page, filters, limit, includeFullyPaidCollection = "" } = queryData;
+    const { page, limit, includeFullyPaidCollection = '' } = queryData;
+    const filters: CollectionFilters | undefined = queryData.filters
+      ? typeof queryData.filters === 'string'
+        ? JSON.parse(queryData.filters)
+        : queryData.filters
+      : undefined;
     const isIncludeFullyPaidCollection = isTrue(includeFullyPaidCollection);
-    let query: any = {
+    let query: mongoose.FilterQuery<ICollectionData> = {
       ...(!isIncludeFullyPaidCollection && {
         dueEmiAmount: { $nin: [null, 0] },
         dueEmi: { $nin: [null, 0] },
@@ -17,35 +34,37 @@ const getCases = async ({ loginUser, query: queryData }: { loginUser: any; query
       organization: loginUser.organization._id,
       dueEmi: { $gte: 1 },
     };
-    if (filters) {
-      filters = JSON.parse(filters);
-    }
-    if (filters.dueEmi) {
-      if (filters.dueEmi.start !== undefined && filters.dueEmi.end !== undefined) {
+
+    if (filters?.dueEmi) {
+      if (
+        typeof filters.dueEmi !== 'string' &&
+        filters.dueEmi?.start !== undefined &&
+        filters.dueEmi?.end !== undefined
+      ) {
         query.dueEmi = {
-          $gte: Number(filters.dueEmi.start),
-          $lte: Number(filters.dueEmi.end),
+          $gte: Number(filters.dueEmi?.start),
+          $lte: Number(filters.dueEmi?.end),
         };
       } else {
-        if (filters.dueEmi == "0") {
+        if (filters.dueEmi == '0') {
           query = { ...query, dueEmi: { $eq: 0 } };
-        } else if (filters.dueEmi == "1-3") {
+        } else if (filters.dueEmi == '1-3') {
           query = { ...query, dueEmi: { $gte: 1, $lte: 3 } };
-        } else if (filters.dueEmi == "3-6") {
+        } else if (filters.dueEmi == '3-6') {
           query = { ...query, dueEmi: { $gte: 4, $lte: 6 } };
         } else {
           query = { ...query, dueEmi: { $ne: 0 } };
         }
       }
     }
-    if (filters.branch && filters.branch.length > 0) {
+    if (filters?.branch && filters?.branch.length > 0) {
       query.area = { $in: filters.branch };
     }
-    if (filters.loanType) {
+    if (filters?.loanType) {
       query.loanType = { $in: filters.loanType };
     }
 
-    if (filters.lastPaymentDetail?.start && filters.lastPaymentDetail?.end) {
+    if (filters?.lastPaymentDetail?.start && filters?.lastPaymentDetail?.end) {
       const startDate = new Date(filters.lastPaymentDetail.start);
       const endDate = new Date(filters.lastPaymentDetail.end);
       query.$expr = {
@@ -57,9 +76,9 @@ const getCases = async ({ loginUser, query: queryData }: { loginUser: any; query
                   dateString: {
                     $trim: {
                       input: {
-                        $arrayElemAt: [{ $split: ["$lastPaymentDetail", "("] }, 0],
+                        $arrayElemAt: [{ $split: ['$lastPaymentDetail', '('] }, 0],
                       },
-                      chars: " ",
+                      chars: ' ',
                     },
                   },
                 },
@@ -74,9 +93,9 @@ const getCases = async ({ loginUser, query: queryData }: { loginUser: any; query
                   dateString: {
                     $trim: {
                       input: {
-                        $arrayElemAt: [{ $split: ["$lastPaymentDetail", "("] }, 0],
+                        $arrayElemAt: [{ $split: ['$lastPaymentDetail', '('] }, 0],
                       },
-                      chars: " ",
+                      chars: ' ',
                     },
                   },
                 },
@@ -87,57 +106,58 @@ const getCases = async ({ loginUser, query: queryData }: { loginUser: any; query
         ],
       };
     }
-    const [_isCollectionAreaView, _isCollectionAssignedView, _isCollectionSelfView, _isCollectionOtherView] =
+    const [_isCollectionAreaView, _isCollectionAssignedView, _isCollectionOtherView] =
       await Promise.all([
         checkPermission(loginUser, PERMISSIONS.COLLECTION_VIEW_AREA),
         checkPermission(loginUser, PERMISSIONS.COLLECTION_VIEW_ASSIGNED),
-        checkPermission(loginUser, PERMISSIONS.COLLECTION_ASSIGN_CASE),
         checkPermission(loginUser, PERMISSIONS.COLLECTION_VIEW_OTHER),
       ]);
-    const _isSuperAdmin = isSuperAdmin([loginUser?.role || ""]);
+    const _isSuperAdmin = isSuperAdmin([loginUser?.role || '']);
 
-    if (_isCollectionSelfView && !_isCollectionOtherView && !_isSuperAdmin) {
-      query.assignedTo = new Types.ObjectId(loginUser.employeeId);
-    }
+    query.$and = [];
+    const accessOrConditions = [];
 
     if (_isCollectionAssignedView && !_isCollectionOtherView && !_isSuperAdmin) {
-      query.assignedTo = new Types.ObjectId(loginUser.employeeId);
+      accessOrConditions.push({ assignedTo: new Types.ObjectId(loginUser.employeeId) });
     }
 
     if (_isCollectionAreaView && !_isCollectionOtherView && !_isSuperAdmin) {
       if (loginUser.branches && loginUser.branches.length > 0) {
-        query.area = { $in: loginUser?.branches };
+        accessOrConditions.push({ area: { $in: loginUser?.branches } });
       }
     }
 
-    if (filters.search) {
-      query = {
-        ...query,
+    if (filters?.search) {
+      query.$and.push({
         $or: [
-          { caseNo: { $regex: filters.search, $options: "i" } },
-          { customer: { $regex: filters.search, $options: "i" } },
+          { caseNo: { $regex: filters.search, $options: 'i' } },
+          { customer: { $regex: filters.search, $options: 'i' } },
         ],
-      };
+      });
     }
-
+    if (accessOrConditions.length > 0) {
+      query.$and.push({ $or: accessOrConditions });
+    }
+    if (!query.$and.length) delete query.$and;
     const caseCollectionStatus: PipelineStage[] = [
       {
         $match: query,
       },
+
       {
         $lookup: {
-          from: "collection_case_followups",
-          localField: "_id",
-          foreignField: "refCaseId",
-          as: "followUps",
+          from: 'collection_case_followups',
+          localField: '_id',
+          foreignField: 'refCaseId',
+          as: 'followUps',
         },
       },
       {
         $lookup: {
-          from: "collection_case_payments",
-          localField: "_id",
-          foreignField: "refCaseId",
-          as: "payments",
+          from: 'collection_case_payments',
+          localField: '_id',
+          foreignField: 'refCaseId',
+          as: 'payments',
         },
       },
       {
@@ -145,22 +165,22 @@ const getCases = async ({ loginUser, query: queryData }: { loginUser: any; query
           today: new Date(),
           upcomingP2P: {
             $filter: {
-              input: "$followUps",
-              as: "f",
+              input: '$followUps',
+              as: 'f',
               cond: {
-                $gte: ["$$f.commit", new Date().setHours(0, 0, 0, 0)],
+                $gte: ['$$f.commit', new Date().setHours(0, 0, 0, 0)],
               },
             },
           },
           recentP2P: {
             $filter: {
-              input: "$followUps",
-              as: "f",
+              input: '$followUps',
+              as: 'f',
               cond: {
                 $and: [
-                  { $lte: ["$$f.commit", new Date()] },
+                  { $lte: ['$$f.commit', new Date()] },
                   {
-                    $gte: ["$$f.commit", { $subtract: [new Date(), 1000 * 60 * 60 * 24 * 3] }],
+                    $gte: ['$$f.commit', { $subtract: [new Date(), 1000 * 60 * 60 * 24 * 3] }],
                   },
                 ],
               },
@@ -168,10 +188,10 @@ const getCases = async ({ loginUser, query: queryData }: { loginUser: any; query
           },
           recentPayments: {
             $filter: {
-              input: "$payments",
-              as: "p",
+              input: '$payments',
+              as: 'p',
               cond: {
-                $gte: ["$$p.date", { $subtract: [new Date(), 1000 * 60 * 60 * 24 * 3] }],
+                $gte: ['$$p.date', { $subtract: [new Date(), 1000 * 60 * 60 * 24 * 3] }],
               },
             },
           },
@@ -183,8 +203,8 @@ const getCases = async ({ loginUser, query: queryData }: { loginUser: any; query
             $switch: {
               branches: [
                 {
-                  case: { $gt: ["$dueEmiAmount", 0] },
-                  then: "Due Payment",
+                  case: { $gt: ['$dueEmiAmount', 0] },
+                  then: 'Due Payment',
                 },
                 {
                   case: {
@@ -192,16 +212,16 @@ const getCases = async ({ loginUser, query: queryData }: { loginUser: any; query
                       {
                         $size: {
                           $filter: {
-                            input: "$payments",
-                            as: "p",
+                            input: '$payments',
+                            as: 'p',
                             cond: {
                               $in: [
-                                "$$p.date",
+                                '$$p.date',
                                 {
                                   $map: {
-                                    input: "$followUps",
-                                    as: "f",
-                                    in: "$$f.commit",
+                                    input: '$followUps',
+                                    as: 'f',
+                                    in: '$$f.commit',
                                   },
                                 },
                               ],
@@ -212,43 +232,53 @@ const getCases = async ({ loginUser, query: queryData }: { loginUser: any; query
                       0,
                     ],
                   },
-                  then: "Paid",
+                  then: 'Paid',
                 },
                 {
                   case: {
-                    $and: [{ $eq: [{ $size: "$recentP2P" }, 0] }, { $eq: [{ $size: "$recentPayments" }, 0] }],
+                    $and: [
+                      { $eq: [{ $size: '$recentP2P' }, 0] },
+                      { $eq: [{ $size: '$recentPayments' }, 0] },
+                    ],
                   },
-                  then: "Expired",
+                  then: 'Expired',
                 },
               ],
-              default: "Due Payment",
+              default: 'Due Payment',
             },
           },
         },
       },
       {
         $lookup: {
-          from: "Employeesv2",
-          localField: "assignedTo",
-          foreignField: "_id",
-          as: "assignedTo",
+          from: 'Employeesv2',
+          localField: 'assignedTo',
+          foreignField: '_id',
+          as: 'assignedTo',
         },
       },
       {
         $facet: {
-          data: [{ $sort: { caseNo: 1 } }, { $skip: (+page || 0) * (+limit || 10) }, { $limit: +limit || 10 }],
-          total: [{ $count: "count" }],
-          completedCases: [{ $match: { $or: [{ dueEmi: 0 }, { dueEmi: null }] } }, { $count: "count" }],
+          data: [
+            { $sort: { isFlagged: -1, caseNo: 1 } },
+            { $skip: (+page || 0) * (+limit || 10) },
+            { $limit: +limit || 10 },
+          ],
+          total: [{ $count: 'count' }],
+          completedCases: [
+            { $match: { $or: [{ dueEmi: 0 }, { dueEmi: null }] } },
+            { $count: 'count' },
+          ],
           loanTypeSummary: [
             {
               $group: {
-                _id: "$loanType",
+                _id: '$loanType',
                 count: { $sum: 1 },
               },
             },
             {
               $project: {
-                loanType: "$_id",
+                loanType: '$_id',
                 count: 1,
                 _id: 0,
               },
@@ -258,7 +288,7 @@ const getCases = async ({ loginUser, query: queryData }: { loginUser: any; query
       },
       {
         $unwind: {
-          path: "$total",
+          path: '$total',
           preserveNullAndEmptyArrays: true,
         },
       },
@@ -271,11 +301,10 @@ const getCases = async ({ loginUser, query: queryData }: { loginUser: any; query
         CollectionModel.aggregate(caseCollectionStatus),
         CollectionModel.aggregate([
           { $match: { organization: loginUser.organization._id } },
-          { $group: { _id: "$area" } },
+          { $group: { _id: '$area' } },
         ]),
       ]);
-    } catch (error) {
-      console.error(error);
+    } catch {
       branches = [];
       data = [];
     }
@@ -292,8 +321,8 @@ const getCases = async ({ loginUser, query: queryData }: { loginUser: any; query
           label: _id.toUpperCase(),
         })),
     };
-  } catch (error: any) {
-    throw new Error(error);
+  } catch (error) {
+    throw new Error(error as string);
   }
 };
 
