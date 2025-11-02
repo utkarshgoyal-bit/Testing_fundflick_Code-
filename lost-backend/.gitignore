@@ -5,3 +5,7 @@ logs
 dist
 .vercel
 /temp/
+# Test coverage
+coverage/
+*.lcov
+.nyc_output/

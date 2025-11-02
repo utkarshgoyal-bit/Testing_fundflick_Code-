@@ -19,6 +19,10 @@ export const generateToken = async ({ user, email }: { user: User; email: string
 };
 
 export const getToken = (req: Request): string => {
-  const token = req.headers?.authorization || '';
-  return token;
+  const authHeader = req.headers?.authorization || '';
+  // Strip "Bearer " prefix if present
+  if (authHeader.startsWith('Bearer ')) {
+    return authHeader.substring(7);
+  }
+  return authHeader;
 };

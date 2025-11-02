@@ -46,6 +46,8 @@ describe('Back Office Operations E2E Tests', () => {
       .post('/customer-file/customer_details')
       .set('Authorization', `Bearer ${salesmanToken}`)
       .set('organization', organizationId)
+      .field('loanType', 'Personal Loan')
+      .field('fileBranch', 'BR001')
       .field('customerDetails[firstName]', 'Test')
       .field('customerDetails[lastName]', 'Customer')
       .field('customerDetails[phoneNumber]', '9876543210')
@@ -131,7 +133,7 @@ describe('Back Office Operations E2E Tests', () => {
 
       // Verify 403 Forbidden or similar error
       expect(response.status).toBeGreaterThanOrEqual(400);
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty('errorMessage');
     });
   });
 

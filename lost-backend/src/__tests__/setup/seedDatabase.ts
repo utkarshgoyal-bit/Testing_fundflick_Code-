@@ -106,12 +106,17 @@ export const seedRoles = async (): Promise<void> => {
     }
 
     const roles = [
-      // Sales Role - No special permissions (for testing permission enforcement)
+      // Sales Role - Basic customer file permissions
       {
         _id: new mongoose.Types.ObjectId(),
         organization: org1._id,
         name: 'Sales Role',
-        permissions: [],
+        permissions: [
+          'customer_file_view',
+          'customer_file_create',
+          'customer_file_update',
+          'customer_file_view_self',
+        ],
         rolesAccess: [],
         createdBy: creatorId,
       },
@@ -121,9 +126,13 @@ export const seedRoles = async (): Promise<void> => {
         organization: org1._id,
         name: 'Back Office Role',
         permissions: [
+          'customer_file_view',
+          'customer_file_view_others',
           'verify_step',
           'telephone_verification',
           'customer_file_verify_step',
+          'customer_file_back_office',
+          'customer_file_comment',
         ],
         rolesAccess: [],
         createdBy: creatorId,
@@ -134,6 +143,8 @@ export const seedRoles = async (): Promise<void> => {
         organization: org1._id,
         name: 'Credit Manager Role',
         permissions: [
+          'customer_file_view',
+          'customer_file_view_others',
           'customer_file_task_approved',
           'customer_file_task_rejected',
         ],
@@ -145,7 +156,12 @@ export const seedRoles = async (): Promise<void> => {
         _id: new mongoose.Types.ObjectId(),
         organization: org1._id,
         name: 'Marketing Manager Role',
-        permissions: ['customer_file_task_pending'],
+        permissions: [
+          'customer_file_view',
+          'customer_file_view_others',
+          'customer_file_task_pending',
+          'customer_file_send_review',
+        ],
         rolesAccess: [],
         createdBy: creatorId,
       },
@@ -154,7 +170,25 @@ export const seedRoles = async (): Promise<void> => {
         _id: new mongoose.Types.ObjectId(),
         organization: org1._id,
         name: 'Payment Collection Role',
-        permissions: ['customer_file_fees'],
+        permissions: [
+          'customer_file_view',
+          'customer_file_view_others',
+          'customer_file_fees',
+        ],
+        rolesAccess: [],
+        createdBy: creatorId,
+      },
+      // Org2 Manager Role - Has basic permissions for org2
+      {
+        _id: new mongoose.Types.ObjectId(),
+        organization: org2._id,
+        name: 'Org2 Manager Role',
+        permissions: [
+          'customer_file_view',
+          'customer_file_create',
+          'customer_file_update',
+          'customer_file_view_others',
+        ],
         rolesAccess: [],
         createdBy: creatorId,
       },
@@ -167,8 +201,9 @@ export const seedRoles = async (): Promise<void> => {
     seededData.roles.creditManagerRole = created[2];
     seededData.roles.marketingManagerRole = created[3];
     seededData.roles.paymentRole = created[4];
+    seededData.roles.org2ManagerRole = created[5];
 
-    console.log('✅ Seeded 5 test roles with permissions');
+    console.log('✅ Seeded 6 test roles with permissions');
   } catch (error) {
     console.error('❌ Error seeding roles:', error);
     throw error;
@@ -444,7 +479,9 @@ export const seedUsers = async (): Promise<void> => {
       throw new Error('Employees must be seeded before users');
     }
 
-    if (!salesRole || !backOfficeRole || !creditManagerRole || !marketingManagerRole || !paymentRole) {
+    const { org2ManagerRole } = seededData.roles;
+
+    if (!salesRole || !backOfficeRole || !creditManagerRole || !marketingManagerRole || !paymentRole || !org2ManagerRole) {
       throw new Error('Roles must be seeded before users');
     }
 
@@ -511,6 +548,7 @@ export const seedUsers = async (): Promise<void> => {
         employeeId: org2user._id,
         password: hashedPassword,
         role: 'Branch Manager',
+        roleRef: org2ManagerRole._id,
         branches: ['BR003'],
         loggedIn: 0,
         isActive: true,
