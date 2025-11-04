@@ -306,6 +306,7 @@ describe('Organization Isolation - Security', () => {
 
   describe('Test 4: Should not approve other org\'s file', () => {
     let org1FileForApproval: string;
+    let org1FileForApprovalLoanNumber: number;
 
     beforeAll(async () => {
       // Create a file in Org1 and set it to UNDER_REVIEW
@@ -326,6 +327,7 @@ describe('Organization Isolation - Security', () => {
         .field('customerDetails[currentAddress]', '123 Test Street');
 
       org1FileForApproval = createResponse.body.data?._id;
+      org1FileForApprovalLoanNumber = createResponse.body.data?.loanApplicationNumber;
 
       if (org1FileForApproval) {
         // Set status to UNDER_REVIEW directly in DB (simulating marketing manager action)
@@ -337,7 +339,7 @@ describe('Organization Isolation - Security', () => {
     }, 60000);
 
     it('should reject approval attempt from other organization', async () => {
-      if (!org1FileForApproval) {
+      if (!org1FileForApprovalLoanNumber) {
         console.log('⚠️  Skipping: No approval file created');
         return;
       }
@@ -348,7 +350,7 @@ describe('Organization Isolation - Security', () => {
         .set('Authorization', `Bearer ${org2UserToken}`)
         .set('organization', org2Id)
         .send({
-          fileId: org1FileForApproval,
+          loanApplicationNumber: org1FileForApprovalLoanNumber,
           status: STATUS.APPROVED,
           remarks: 'Approved by Org2 (should fail)',
         });
@@ -367,7 +369,7 @@ describe('Organization Isolation - Security', () => {
     });
 
     it('should allow approval from own organization credit manager', async () => {
-      if (!org1FileForApproval) {
+      if (!org1FileForApprovalLoanNumber) {
         console.log('⚠️  Skipping: No approval file created');
         return;
       }
@@ -378,7 +380,7 @@ describe('Organization Isolation - Security', () => {
         .set('Authorization', `Bearer ${org1CreditManagerToken}`)
         .set('organization', org1Id)
         .send({
-          fileId: org1FileForApproval,
+          loanApplicationNumber: org1FileForApprovalLoanNumber,
           status: STATUS.APPROVED,
           remarks: 'Approved by Org1 Credit Manager',
         });

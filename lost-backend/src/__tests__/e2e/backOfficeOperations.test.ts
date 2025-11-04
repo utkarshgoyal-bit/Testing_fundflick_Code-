@@ -93,7 +93,7 @@ describe('Back Office Operations E2E Tests', () => {
   describe('POST /customer-file/file-operations/verify-step', () => {
     it('should verify a customer file step with valid permission', async () => {
       // Skip if file wasn't created
-      if (!fileId) {
+      if (!loanApplicationNumber) {
         console.log('Skipping test: File creation failed');
         return;
       }
@@ -103,7 +103,7 @@ describe('Back Office Operations E2E Tests', () => {
         .set('Authorization', `Bearer ${backOfficeToken}`)
         .set('organization', organizationId)
         .send({
-          fileId: fileId,
+          fileId: loanApplicationNumber,
           step: 'customerDetails',
           isVerified: true,
         });
@@ -126,7 +126,7 @@ describe('Back Office Operations E2E Tests', () => {
         .set('Authorization', `Bearer ${salesmanToken}`)
         .set('organization', organizationId)
         .send({
-          fileId: fileId,
+          fileId: loanApplicationNumber,
           step: 'customerDetails',
           isVerified: true,
         });
@@ -140,7 +140,7 @@ describe('Back Office Operations E2E Tests', () => {
   describe('POST /customer-file/file-operations/telephone-verification', () => {
     it('should mark file step as telephone verified', async () => {
       // Skip if file wasn't created
-      if (!fileId) {
+      if (!loanApplicationNumber) {
         console.log('Skipping test: File creation failed');
         return;
       }
@@ -150,7 +150,7 @@ describe('Back Office Operations E2E Tests', () => {
         .set('Authorization', `Bearer ${backOfficeToken}`)
         .set('organization', organizationId)
         .send({
-          fileId: fileId,
+          fileId: loanApplicationNumber,
           review: 'Positive',
           description: 'Customer details verified via telephone',
         });

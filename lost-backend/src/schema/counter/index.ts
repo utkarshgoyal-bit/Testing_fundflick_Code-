@@ -1,15 +1,35 @@
 import mongoose from 'mongoose';
 
-const { Schema, model } = mongoose;
+const {
+  Schema: { Types },
+  model,
+  Schema,
+} = mongoose;
 
+/**
+ * Counter Schema for atomic sequence generation
+ * Used to generate unique sequential numbers per organization
+ */
 const counterSchema = new Schema({
-  _id: { type: String, required: true },
-  organizationId: { type: Schema.Types.ObjectId, required: true, ref: 'organization' },
-  sequence: { type: Number, default: 0 },
+  organization: {
+    type: Types.ObjectId,
+    required: true,
+    ref: 'organization',
+    index: true,
+  },
+  sequenceName: {
+    type: Types.String,
+    required: true,
+    index: true,
+  },
+  value: {
+    type: Types.Number,
+    default: 0,
+  },
 });
 
-counterSchema.index({ _id: 1, organizationId: 1 }, { unique: true });
+// Compound unique index to ensure one counter per org + sequence combination
+counterSchema.index({ organization: 1, sequenceName: 1 }, { unique: true });
 
-const CounterSchema = model('Counter', counterSchema);
-
-export default CounterSchema;
+const Counter = model('Counter', counterSchema);
+export default Counter;

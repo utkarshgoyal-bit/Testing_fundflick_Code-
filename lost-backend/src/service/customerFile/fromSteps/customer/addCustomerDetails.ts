@@ -3,6 +3,7 @@ import { uploadFileToS3 } from '../../../../aws/s3';
 import CustomerFileModel from '../../../../schema/customerFile';
 import CustomersModel from '../../../../schema/customerFile/customers';
 import { ERROR, STEPS_NAMES } from '../../../../shared/enums';
+import generateLoanNumber from '../../generateLoanNumber';
 
 const addCustomerDetails = async ({
   files,
@@ -16,10 +17,7 @@ const addCustomerDetails = async ({
   if (!loginUser) {
     throw ERROR.USER_NOT_FOUND;
   }
-  const loanApplicationNumber =
-    (await CustomerFileModel.find({ organization: loginUser.organization._id })
-      .countDocuments()
-      .lean()) + 1;
+  const loanApplicationNumber = await generateLoanNumber(loginUser.organization._id);
   if (files) {
     const { 'customerDetails[uidBack]': uidBackImage, 'customerDetails[uidFront]': uidFrontImage } =
       files;

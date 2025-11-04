@@ -1,5 +1,6 @@
 import express, { Express } from 'express';
-import { getIFSCDetails, ocrController } from '../../controller';
+import getIFSCDetails from '../../controller/ifscDetails';
+import ocrController from '../../controller/ocr';
 import GetSignedUrl from '../../controller/signedUrl';
 import { upload } from '../../middleware/fileUpload';
 import morganMiddleware from '../../middleware/loggerMiddleware';
