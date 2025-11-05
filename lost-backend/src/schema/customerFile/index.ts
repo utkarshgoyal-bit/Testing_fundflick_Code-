@@ -24,7 +24,7 @@ const customerFileSchema = new Schema(
     loanApplicationNumber: {
       type: Types.Number,
       required: [true, 'Loan Application Number is required'],
-      unique: true,
+      // Unique per organization - see compound index below
     },
     loanType: {
       type: Types.String,
@@ -479,6 +479,9 @@ const customerFileSchema = new Schema(
   },
   { timestamps: true }
 );
+
+// Compound unique index: loan number must be unique per organization
+customerFileSchema.index({ organization: 1, loanApplicationNumber: 1 }, { unique: true });
 
 const CustomerFile = model('CustomerFilesv2', customerFileSchema);
 export default CustomerFile;
