@@ -1,5 +1,5 @@
 import express, { Express } from 'express';
-import { AuthController } from '../../controller/index';
+import AuthController from '../../controller/auth';
 import { verifyToken } from '../../middleware';
 import { ROUTES } from '../../shared/enums';
 

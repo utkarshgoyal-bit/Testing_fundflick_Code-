@@ -4,11 +4,13 @@
  */
 
 import request from 'supertest';
-import app from '../../index';
+import { testApp } from '../setup/testApp';
 import { seedAll, getTestCredentials, cleanDatabase, seededData } from '../setup/seedDatabase';
 import { ERROR, SUCCESS } from '../../shared/enums';
 import path from 'path';
 import fs from 'fs';
+
+const app = testApp;
 
 describe('Back Office Operations E2E Tests', () => {
   let salesmanToken: string;

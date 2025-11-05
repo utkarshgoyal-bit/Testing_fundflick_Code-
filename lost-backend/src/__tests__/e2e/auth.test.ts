@@ -4,9 +4,11 @@
  */
 
 import request from 'supertest';
-import app from '../../index';
+import { testApp } from '../setup/testApp';
 import { seedAll, getTestCredentials, cleanDatabase } from '../setup/seedDatabase';
 import { ERROR, SUCCESS } from '../../shared/enums';
+
+const app = testApp;
 
 describe('Authentication E2E Tests', () => {
   // Seed database once before all tests in this suite

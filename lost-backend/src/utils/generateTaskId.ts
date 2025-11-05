@@ -15,7 +15,7 @@ export async function generateTaskId(
   // Get and increment the counter atomically
   const counter = await CounterSchema.findOneAndUpdate(
     { _id: counterId, organizationId },
-    { $inc: { sequence: 1 } },
+    { $inc: { value: 1 } },
     {
       new: true,
       upsert: true,
@@ -27,8 +27,8 @@ export async function generateTaskId(
   // Regular tasks: MAIT-0001, MAIT-0002
   // Bulk tasks: MAIT-BULK-0001, MAIT-BULK-0002
   const taskId = isBulkTask
-    ? `${orgPrefix}-BULK-${counter.sequence.toString().padStart(4, '0')}`
-    : `${orgPrefix}-${counter.sequence.toString().padStart(4, '0')}`;
+    ? `${orgPrefix}-BULK-${counter.value.toString().padStart(4, '0')}`
+    : `${orgPrefix}-${counter.value.toString().padStart(4, '0')}`;
 
   return taskId;
 }
@@ -42,7 +42,7 @@ export async function resetTaskCounter(
 
   await CounterSchema.findOneAndUpdate(
     { _id: counterId, organizationId },
-    { sequence: resetValue },
+    { value: resetValue },
     {
       upsert: true,
       setDefaultsOnInsert: true,
@@ -57,7 +57,7 @@ export async function getTaskCounter(
   const counterId = isBulkTask ? `bulk_task_${organizationId}` : `task_${organizationId}`;
 
   const counter = await CounterSchema.findOne({ _id: counterId, organizationId });
-  return counter?.sequence || 0;
+  return counter?.value || 0;
 }
 
 export async function resetAllTaskCounters(

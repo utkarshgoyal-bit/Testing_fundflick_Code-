@@ -58,7 +58,10 @@ const addCustomerDetails = async ({
   body.customerDetails = customer._id;
   const loanFile = new CustomerFileModel(body);
   const loanFileResponse = await loanFile.save();
-  return { _id: loanFileResponse ? loanFileResponse._id : null };
+  return {
+    _id: loanFileResponse ? loanFileResponse._id : null,
+    loanApplicationNumber: loanFileResponse ? loanFileResponse.loanApplicationNumber : null,
+  };
 };
 
 export default addCustomerDetails;

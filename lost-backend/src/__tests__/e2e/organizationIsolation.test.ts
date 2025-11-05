@@ -7,10 +7,12 @@
  */
 
 import request from 'supertest';
-import app from '../../index';
+import { testApp } from '../setup/testApp';
 import { seedAll, getTestCredentials, cleanDatabase, seededData } from '../setup/seedDatabase';
 import CustomerFileSchema from '../../schema/customerFile/index';
 import { STATUS } from '../../shared/enums';
+
+const app = testApp;
 
 describe('Organization Isolation - Security', () => {
   let org1SalesToken: string;
