@@ -1,10 +1,23 @@
 import { Types } from 'mongoose';
-import { io, onlineUsers } from '..';
 import { firebaseMessaging } from '../firebase/firebaseAdmin';
 import { default as Logger } from '../lib/logger';
 import { UserSchema } from '../schema';
 import NotificationModel from '../schema/notification';
 import { ROLES } from '../shared/enums';
+
+// Lazy imports to avoid circular dependency
+let io: any;
+let onlineUsers: any;
+
+// Helper function to get socket dependencies at runtime
+function getSocketDependencies() {
+  if (!io || !onlineUsers) {
+    const index = require('..');
+    io = index.io;
+    onlineUsers = index.onlineUsers;
+  }
+  return { io, onlineUsers };
+}
 
 interface Notification {
   creator: unknown;
@@ -19,6 +32,7 @@ interface Notification {
   loanApplicationNumber: number;
   organization: string;
 }
+
 export default async function CustomerFileStatusNotification({
   customerFileId,
   updater,
@@ -43,7 +57,10 @@ export default async function CustomerFileStatusNotification({
     const receivers = [
       ...new Set([creatorUserBranch?.toObject(), ...branchManagers, superAdmin?.toObject()]),
     ];
+    
     if (receivers.length > 0) {
+      const { io: socketIO, onlineUsers: users } = getSocketDependencies();
+      
       const notifications = await Promise.all(
         receivers.map(async receiver => {
           if (!receiver || receiver.employeeId.toString() === updater.employeeId) return null;
@@ -79,8 +96,8 @@ export default async function CustomerFileStatusNotification({
               });
           }
 
-          if (onlineUsers[receiver.employeeId.toString()]) {
-            io.to(onlineUsers[receiver.employeeId.toString()]).emit('notification', {
+          if (users[receiver.employeeId.toString()]) {
+            socketIO.to(users[receiver.employeeId.toString()]).emit('notification', {
               user: new Types.ObjectId(receiver.employeeId),
               file: customerFileId,
               loanApplicationNumber,
@@ -111,7 +128,7 @@ export default async function CustomerFileStatusNotification({
 
 export async function TasksUpdateNotification({
   message,
-  users,
+  users: userIds,
   loanApplicationNumber,
   organization,
 }: {
@@ -125,12 +142,15 @@ export async function TasksUpdateNotification({
   organization: string;
 }) {
   try {
-    const uniqueUsers = Array.from(new Set(users));
+    const { io: socketIO, onlineUsers: users } = getSocketDependencies();
+    const uniqueUsers = Array.from(new Set(userIds));
+    
     for (const user of uniqueUsers) {
       const employeeId = typeof user === 'string' ? new Types.ObjectId(user) : user;
-      const socketId = onlineUsers[employeeId.toString()];
+      const socketId = users[employeeId.toString()];
+      
       if (socketId) {
-        io.to(socketId).emit('notification', {
+        socketIO.to(socketId).emit('notification', {
           employeeId: employeeId,
           createdAt: new Date(),
           readStatus: false,
