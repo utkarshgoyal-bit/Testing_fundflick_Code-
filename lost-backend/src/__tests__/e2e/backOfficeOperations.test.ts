@@ -193,26 +193,24 @@ describe('Back Office Operations E2E Tests', () => {
 
   describe('POST /customer-file/file-operations/customer-file-comment', () => {
     it('should add comment to customer file', async () => {
-      // Skip if file wasn't created
-      if (!loanApplicationNumber) {
+      // ... file creation code ...
+
+      if (!createdLoanNumber) {
         console.log('Skipping test: File creation failed');
         return;
       }
 
-      const response = await request(app)
+      const response = await request(testApp)
         .post('/customer-file/file-operations/customer-file-comment')
-        .set('Authorization', `Bearer ${backOfficeToken}`)
-        .set('organization', organizationId)
+        .set(authHeaders)
         .send({
-          loanApplicationNumber: loanApplicationNumber,
-          comments: 'File verified and ready for next step',
+          loanApplicationNumber: createdLoanNumber, // ✅ Use loan number
+          text: 'File verified and ready for next step', // ✅ Use 'text'
+          type: 'general', // ✅ Add type
         });
 
-      // Log response for debugging
-      if (response.status !== 200) {
-        console.log('Response status:', response.status);
-        console.log('Response body:', response.body);
-      }
+      console.log('Response status:', response.status);
+      console.log('Response body:', response.body);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
